@@ -4,9 +4,7 @@ const pool = mysql.createPool({
   host: 'localhost',
   user: 'exuser',
   password: 'password',
-  database: 'library_db',
-  waitForConnections: true,
-  connectionLimit: 10
+  database: 'library_db'
 });
 
-const db = pool.promise();
+module.exports = pool;
