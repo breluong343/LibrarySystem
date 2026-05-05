@@ -13,22 +13,27 @@ function viewAllMovies(callback) {
     });
 }
 
-function delBooks(title, callback) {
+function delBooks(bookID, callback) {
     const sql = 'UPDATE books SET copies = 0 WHERE title = ?';
     db.query(sql, [title], (err, result) => {
         callback(err, result);
     });
 }
 
-function delMovies(title, callback) {
-    const sql = 'UPDATE movies SET active = 0 WHERE title = ?';
-    db.query(sql, [title], (err, result) => {
+function delMovies(movieId, callback) {
+    const sql = 'UPDATE movies 
+        SET Title = NULL, 
+            Year = NULL, 
+            Rating = NULL, 
+            Genre = NULL
+        WHERE movieID = ?';
+    db.query(sql, [movieID], (err, result) => {
         callback(err, result);
     });
 }
 
 
-async function addBooks(BookID, Title, ISP, Author, Copies, Genre, Type) {\
+async function addBooks(BookID, Title, ISP, Author, Copies, Genre, Type, callback) {\
     getNextID('books', 'BookID', (err, nextBookID) => {
         if (err) return callback(err);
         BookID = nextBookID;
@@ -39,7 +44,7 @@ async function addBooks(BookID, Title, ISP, Author, Copies, Genre, Type) {\
         });
     });
 }
-async function addMovies(MovieID, Title, Year, Rating, Genre) {
+async function addMovies(MovieID, Title, Year, Rating, Genre, callback) {
     getNextID('movies', 'MovieID', (err, nextMovieID) => {
         if (err) return callback(err);
         MovieID = nextMovieID;
