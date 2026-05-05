@@ -24,6 +24,13 @@ function addUser(username, password, memberID, address, callback) {
         });
     });
 }
+/*function startbutton(){
+    CREATE EVENT global_trash_collection
+ON SCHEDULE EVERY 1 DAY
+STARTS '2026-05-06 03:00:00'
+DO
+  DELETE FROM movies WHERE title IS NULL;
+}*/
 
 function getNextID(table, idColumn, callback) {
     const sql = `SELECT MAX(${idColumn}) AS maxID FROM ${table}`;
