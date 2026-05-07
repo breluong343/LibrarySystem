@@ -1,0 +1,168 @@
+const express = require('express');
+const cors = require('cors');
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+const staff = require('./stafffunc');
+const member = require('./memberfunc');
+const system = require('./system');
+const db = require('./db');
+
+// Login
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body;
+    system.checkLogin(username, password, (err, user) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!user) return res.status(401).json({ error: 'Invalid username or password' });
+
+        db.query('SELECT * FROM Staff WHERE Name = ?', [username], (err2, staffRows) => {
+            if (err2) return res.status(500).json({ error: err2.message });
+            let role = 'member';
+            if (staffRows.length > 0) {
+                role = staffRows[0].Role === 'Manager' ? 'admin' : 'staff';
+            }
+            res.json({ message: 'Login successful!', role, username });
+        });
+    });
+});
+
+// Books
+app.get('/api/books', (req, res) => {
+    const { search, genre, type } = req.query;
+    staff.viewAllBooks((err, books) => {
+        if (err) return res.status(500).json({ error: err.message });
+        let result = books;
+        if (search) result = result.filter( b => 
+            b.Title?.toLowerCase().includes(search.toLowerCase()) ||
+            b.Author?.toLowerCase().includes(search.toLowerCase()));
+        if (genre) result = result.filter(b => b.Genre === genre);
+        if (type) result = result.filter(b => b.Type === type);
+        res.json(result);
+    });
+});
+app.post('/api/books', (req, res) => {
+    const { Title, ISBN, Author, Copies, Genre, Type } = req.body;
+    if (!Title || !ISBN || !Author || !Copies || !Genre || !Type) {
+        return res.status(400).json({ error: 'All fields are required! Please enter!' });
+    }
+    staff.addBooks(null, Title, ISBN, Author, Copies, Genre, Type, (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Book added!' });
+    });
+});
+app.delete('/api/books/:id', (req, res) => {
+    staff.delBooks(req.params.id, (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Book deleted!' });
+    });
+});
+
+// Movies
+app.get('/api/movies', (req, res) => {
+    const { search, genre } = req.query;
+    staff.viewAllMovies((err, movies) => {
+        if (err) return res.status(500).json({ error: err.message });
+        let result = movies;
+        if (search) result = result.filter( b => 
+            b.Title?.toLowerCase().includes(search.toLowerCase()));
+        if (genre) result = result.filter(b => b.Genre === genre);
+        res.json(result);
+    });
+});
+app.post('/api/movies', (req, res) => {
+    const { Title, Year, Rating, Genre } = req.body;
+    if (!Title || !Year || !Rating || !Genre) {
+        return res.status(400).json({ error: 'All fields are required! Please enter!' });
+    }
+    staff.addMovies(null, Title, Year, Rating, Genre, (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Movie added!' });
+    });
+});
+app.delete('/api/movies/:id', (req, res) => {
+    staff.delMovies(req.params.id, (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Movie deleted!' });
+    });
+});
+
+// Members
+app.get('/api/members', (req, res) => {
+    const { search } = req.query;
+    staff.viewAllMembers((err, members) => {
+        if (err) return res.status(500).json({ error: err.message });
+        let result = members;
+        if (search) result = result.filter( b => 
+            b.Username?.toLowerCase().includes(search.toLowerCase()) ||
+            b.Member_ID?.toString().includes(search));
+        res.json(result);
+    });
+});
+
+app.delete('/api/members/:id', (req, res) => {
+    staff.delMembers(req.params.id, (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Member deleted!' });
+    });
+});
+
+// Borrows
+app.get('/api/borrows', (req, res) => {
+    staff.viewAllBorrows((err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+app.post('/api/borrows/books', (req, res) => {
+    const { Member_ID, Book_ID, BorrowDate } = req.body;
+    const date = BorrowDate || new Date().toISOString().split('T')[0];
+    staff.checkoutBook(Member_ID, Book_ID, date, (err) => {
+        if (err) return res.status(500).json({ error: err.message })
+    })
+});
+app.post('/api/borrows/movies', (req, res) => {
+    const { Member_ID, Movie_ID, BorrowDate } = req.body;
+    const date = BorrowDate || new Date().toISOString().split('T')[0];
+    staff.checkoutBook(Member_ID, Movie_ID, date, (err) => {
+        if (err) return res.status(500).json({ error: err.message })
+    })
+});
+app.delete('/api/borrows/books', (req, res) => {
+    const { Member_ID, Book_ID, BorrowDate } = req.body;
+    const date = BorrowDate || new Date().toISOString().split('T')[0];
+    staff.returnBook(Member_ID, Book_ID, date, (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Book returned!' });
+    });
+});
+app.delete('/api/borrows/movies', (req, res) => {
+    const { Member_ID, Movie_ID, BorrowDate } = req.body;
+    const date = BorrowDate || new Date().toISOString().split('T')[0];
+    staff.returnMovie(Member_ID, Movie_ID, date, (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Movie returned!' });
+    });
+});
+
+// Holds
+app.post('/api/holds/books', (req, res) => {
+    const { Book_ID, Member_ID } = req.body;
+    member.createBookHold(Book_ID, Member_ID, (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Book Hold added!' });
+    });
+});
+app.post('/api/holds/movies', (req, res) => {
+    const { Movie_ID, Member_ID } = req.body;
+    member.createBookHold(Movie_ID, Member_ID, (err) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: 'Movie Hold added!' });
+    });
+});
+
+const PORT = 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});

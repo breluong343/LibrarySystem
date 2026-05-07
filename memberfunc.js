@@ -1,22 +1,22 @@
 const db = require('./db');
 
 function viewBooks(filters, callback) {
-    viewInd('books', filters, callback);
+    viewInd('Books', filters, callback);
 }
 
 function viewMovies(filters, callback) {
-    viewInd('movies', filters, callback);
+    viewInd('Movies', filters, callback);
 }
 
 function createBookHold(bookID, memberID, callback) {
-    const sql = 'INSERT INTO bookholds (bookID, memberID, holdDate) VALUES (?, ?, NOW())';
+    const sql = 'INSERT INTO Bookhold (Member_ID, Book_ID, BorrowDate) VALUES (?, ?, NOW())';
     db.query(sql, [bookID, memberID], (err, result) => {
         callback(err, result);
     });
 }
 
 function createMovieHold(movieID, memberID, callback) {
-    const sql = 'INSERT INTO movieholds (movieID, memberID, holdDate) VALUES (?, ?, NOW())';
+    const sql = 'INSERT INTO Moviehold (Movie_ID, member_ID, BorrowDate) VALUES (?, ?, NOW())';
     db.query(sql, [movieID, memberID], (err, result) => {
         callback(err, result);
     });
