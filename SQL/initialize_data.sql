@@ -1,6 +1,49 @@
 DROP DATABASE IF EXISTS OnlineLibrarySystem;
 CREATE DATABASE OnlineLibrarySystem;
 USE OnlineLibrarySystem;
+
+CREATE TABLE Users (
+    Username VARCHAR(100) PRIMARY KEY,
+    Password VARCHAR(100),
+    CreationDate DATETIME,
+    Location VARCHAR(100)
+);
+INSERT INTO Users (Username, Password, CreationDate, Location) VALUES
+('invincibleathletics', 'kG#8pT!m@L9rW$z2', '1899-12-30 12:02:02', 'San Diego'),
+('liberatedbond', 'vN9&aC5uJ#sQ2pYk', '2026-05-04 08:04:11', 'Fresno'),
+('hurtsandpiper', '4rT*bX@9Nm@S1vZb', '2026-01-07 09:45:00', 'San Francisco'),
+('antennaasset', 'pW$q7E9%jR#tV2mL', '2026-01-15 01:12:05', 'San Jose'),
+('perceptionunselfish', 'bT#r9L&kX6zM@2pA', '2026-01-21 01:45:06', 'Santa Clara'),
+('yikestrite', 'jY5@vC3uP!nS9sRw', '2026-01-28 01:55:00', 'San Francisco'),
+('continentnocturnal', 'Zq%4N9@pT8vL#r2k', '2026-02-04 02:03:00', 'Santa Clara'),
+('coatisuper', 'mA$w8K#mC7vT9u2J', '2026-02-06 02:13:01', 'Santa Clara'),
+('uprightassist', 'YN15mOmW3RU$I*Mt', '2026-02-11 02:39:00', 'Santa Clara'),
+('boredthankful', 'KKN7XKIp^f2zHgss', '2026-02-17 03:10:08', 'San Francisco'),
+('forevervisitor', 'x7fd*iSfkagU8h7&', '2026-03-04 04:17:00', 'San Jose'),
+('dialintend', 'D%iP4aeQezu0r&^O', '2026-03-20 04:20:00', 'San Jose'),
+('kindleislands', 'aVocBOQNkAKM8xax', '2026-03-23 05:10:00', 'Fresno'),
+('competecope', 'Wa0TrjN2kBwrG^Zw', '2026-03-24 05:07:00', 'San Diego'),
+('shouldervouch', 'RIap0h8I7zRDAd7l', '2026-03-26 07:08:00', 'San Jose'),
+('decorationsbarbers', '&EfIslB9FVGXb$ze', '2026-03-27 08:43:03', 'Fresno'),
+('bubbleshorts', 'cfMwQASK0d8wxKQz', '2026-04-07 09:06:06', 'San Jose'),
+('eggoceanvulture', 'UqTJbZ980v3r', '2025-05-01 05:00:00', 'Fresno'),
+('hornomeganebula', '86UbYEhHS0pQ', '2025-05-08 06:00:00', 'San Diego'),
+('cucumberratrice', 'GzkW3aKsF1t2', '2025-05-20 07:00:00', 'San Jose'),
+('nestapplecherry', 'po13mEYX6LqP', '2025-05-22 08:00:00', 'Fresno'),
+('lemontheshining', 'pe9BI83p90vy', '2025-05-25 09:00:00', 'San Jose'),
+('baseballostrich', 'sUL6B679LQzf', '2025-06-10 10:00:00', 'Santa Clara'),
+('tearushfootball', 's6645IITL2ue', '2025-06-11 11:00:00', 'Santa Clara'),
+('mangoskatesdig', '9svLC0Rrz6Yh', '2025-06-13 12:00:00', 'Santa Clara'),
+('mustardicecream', 'HS1MrFf6b155', '2025-06-23 01:00:00', 'San Francisco'),
+('harpcancermaven', 'm8tlaFdgWS26', '2025-06-24 02:00:00', 'San Jose'),
+('batcheetahbeans', 'o5H7c494N8rv', '2025-06-26 03:00:00', 'San Jose'),
+('kalegarlicbread', 'mdsUyo6782zQ', '2025-06-27 04:00:00', 'Fresno'),
+('singernectarine', 'l5on4MWc1rv5', '2025-06-28 05:00:00', 'San Diego'),
+('webcurrantprune', 'F60r6R9Cl7do', '2025-07-02 06:00:00', 'Santa Clara'),
+('sweetpicklecake', '8HKNBgX4yzd2', '2025-07-10 07:00:00', 'San Francisco'),
+('operacoffeeolaf', 'ud9M6rr9g3E6', '2025-07-15 08:00:00', 'Santa Clara'),
+('cometsfigcheese', 'pXfhO8K6xW7v', '2025-07-22 09:11:03', 'Santa Clara');
+
 CREATE TABLE Books (
     Book_ID INT PRIMARY KEY,
     Title VARCHAR(50),
@@ -56,7 +99,8 @@ INSERT INTO Movies (Movie_ID, Title, Year, Rating, Genre) VALUES
 CREATE TABLE Members (
     Member_ID INT PRIMARY KEY,
     Username VARCHAR(50),
-    Address VARCHAR(100)
+    Address VARCHAR(100),
+    FOREIGN KEY (Username) REFERENCES Users(Username)
 );
 INSERT INTO Members (Member_ID, Username, Address) VALUES
 (1000000, 'invincibleathletics', '654 Oxford Court Levittown, NY 11756'),
@@ -82,26 +126,29 @@ CREATE TABLE Staff (
     Role ENUM('Manager','Assistant','Intern','Volunteer'),
     HoursWorked INT,
     Name VARCHAR(25),
-    Address VARCHAR(100)
+    Address VARCHAR(100), 
+    Username VARCHAR(100),
+    FOREIGN KEY (Username) REFERENCES Users(Username)
 );
-INSERT INTO Staff (Staff_ID, Role, HoursWorked, Name, Address) VALUES
-(10000, 'Manager', 35, 'Alice Rey', '1001 E Santa Clara St, San Jose, CA 95116'),
-(10001, 'Volunteer', 12, 'Bob Trent', '300 S 1st St, San Jose, CA 95113'),
-(10002, 'Manager', 37, 'Lily Sia', '1700 W San Carlos St, San Jose, CA 95128'),
-(10003, 'Volunteer', 18, 'Brian Leen', '500 Santana Row, San Jose, CA 95128'),
-(10004, 'Volunteer', 5, 'Egypt Kent', '2100 Flickinger Ave, San Jose, CA 95131'),
-(10005, 'Assistant', 22, 'Teddy Kim', '4000 Monterey Rd, San Jose, CA 95111'),
-(10006, 'Manager', 40, 'Sarah Fern', '600 Emory St, San Jose, CA 95110'),
-(10007, 'Assistant', 30, 'Skyler Garner', '1500 Gish Rd, San Jose, CA 95112'),
-(10008, 'Assistant', 23,'Kimber Jenkins', '1500 El Camino Real, Santa Clara, CA 95050'),
-(10009, 'Volunteer', 2, 'Willie Noble', '3200 Homestead Rd, Santa Clara, CA 95051'),
-(10010, 'Assistant', 17, 'Declan Rosas', '2500 Mission College Blvd, Santa Clara, CA 95054'),
-(10011, 'Volunteer', 10, 'Hunter Duke', '1000 Lafayette St, Santa Clara, CA 95050'),
-(10012, 'Volunteer', 10, 'Calvin Ellis', '4000 Great America Pkwy, Santa Clara, CA 95054'),
-(10013, 'Intern', 8, 'Joy Sosa', '2100 Monroe St, Santa Clara, CA 95050'),
-(10014, 'Volunteer', 8, 'Kamari Alvarez', '1200 San Tomas Aquino Rd, Santa Clara, CA 95051'),
-(10015, 'Intern', 13, 'Cruz Navarro', '3500 De La Cruz Blvd, Santa Clara, CA 95054'),
-(10016, 'Volunteer', 6, 'Nolan Cano', '500 Benton St, Santa Clara, CA 95050'); 
+INSERT INTO Staff (Staff_ID, Role, HoursWorked, Name, Address, Username) VALUES
+(10000, 'Manager', 35, 'Alice Rey', '1001 E Santa Clara St, San Jose, CA 95116', 'eggoceanvulture'),
+(10001, 'Volunteer', 12, 'Bob Trent', '300 S 1st St, San Jose, CA 95113', 'hornomeganebula'),
+(10002, 'Manager', 37, 'Lily Sia', '1700 W San Carlos St, San Jose, CA 95128', 'cucumberratrice'),
+(10003, 'Volunteer', 18, 'Brian Leen', '500 Santana Row, San Jose, CA 95128', 'nestapplecherry'),
+(10004, 'Volunteer', 5, 'Egypt Kent', '2100 Flickinger Ave, San Jose, CA 95131', 'lemontheshining'),
+(10005, 'Assistant', 22, 'Teddy Kim', '4000 Monterey Rd, San Jose, CA 95111', 'baseballostrich'),
+(10006, 'Manager', 40, 'Sarah Fern', '600 Emory St, San Jose, CA 95110', 'tearushfootball'),
+(10007, 'Assistant', 30, 'Skyler Garner', '1500 Gish Rd, San Jose, CA 95112', 'mangoskatesdig'),
+(10008, 'Assistant', 23, 'Kimber Jenkins', '1500 El Camino Real, Santa Clara, CA 95050', 'mustardicecream'),
+(10009, 'Volunteer', 2, 'Willie Noble', '3200 Homestead Rd, Santa Clara, CA 95051', 'harpcancermaven'),
+(10010, 'Assistant', 17, 'Declan Rosas', '2500 Mission College Blvd, Santa Clara, CA 95054', 'batcheetahbeans'),
+(10011, 'Volunteer', 10, 'Hunter Duke', '1000 Lafayette St, Santa Clara, CA 95050', 'kalegarlicbread'),
+(10012, 'Volunteer', 10, 'Calvin Ellis', '4000 Great America Pkwy, Santa Clara, CA 95054', 'singernectarine'),
+(10013, 'Intern', 8, 'Joy Sosa', '2100 Monroe St, Santa Clara, CA 95050', 'webcurrantprune'),
+(10014, 'Volunteer', 8, 'Kamari Alvarez', '1200 San Tomas Aquino Rd, Santa Clara, CA 95051', 'sweetpicklecake'),
+(10015, 'Intern', 13, 'Cruz Navarro', '3500 De La Cruz Blvd, Santa Clara, CA 95054', 'operacoffeeolaf'),
+(10016, 'Volunteer', 6, 'Nolan Cano', '500 Benton St, Santa Clara, CA 95050', 'cometsfigcheese');
+
 CREATE TABLE Bookshold (
     Member_ID INT,
     Book_ID INT,
@@ -156,31 +203,6 @@ INSERT INTO Movieshold (Member_ID, Movie_ID, BorrowDate) VALUES
 (1000015, 115, '2026-05-01'),
 (1000016, 116, '2026-05-02');
 
-CREATE TABLE Users (
-    Username VARCHAR(100) UNIQUE,
-    Password VARCHAR(100),
-    CreationDate DATETIME,
-    Location VARCHAR(100)
-);
-INSERT INTO Users (Username, Password, CreationDate, Location) VALUES
-('invincibleathletics', 'kG#8pT!m@L9rW$z2', '1899-12-30 12:02:02', 'San Diego'),
-('liberatedbond', 'vN9&aC5uJ#sQ2pYk', '2026-05-04 08:04:11', 'Fresno'),
-('hurtsandpiper', '4rT*bX@9Nm@S1vZb', '2026-01-07 09:45:00', 'San Francisco'),
-('antennaasset', 'pW$q7E9%jR#tV2mL', '2026-01-15 01:12:05', 'San Jose'),
-('perceptionunselfish', 'bT#r9L&kX6zM@2pA', '2026-01-21 01:45:06', 'Santa Clara'),
-('yikestrite', 'jY5@vC3uP!nS9sRw', '2026-01-28 01:55:00', 'San Francisco'),
-('continentnocturnal', 'Zq%4N9@pT8vL#r2k', '2026-02-04 02:03:00', 'Santa Clara'),
-('coatisuper', 'mA$w8K#mC7vT9u2J', '2026-02-06 02:13:01', 'Santa Clara'),
-('uprightassist', 'YN15mOmW3RU$I*Mt', '2026-02-11 02:39:00', 'Santa Clara'),
-('boredthankful', 'KKN7XKIp^f2zHgss', '2026-02-17 03:10:08', 'San Francisco'),
-('forevervisitor', 'x7fd*iSfkagU8h7&', '2026-03-04 04:17:00', 'San Jose'),
-('dialintend', 'D%iP4aeQezu0r&^O', '2026-03-20 04:20:00', 'San Jose'),
-('kindleislands', 'aVocBOQNkAKM8xax', '2026-03-23 05:10:00', 'Fresno'),
-('competecope', 'Wa0TrjN2kBwrG^Zw', '2026-03-24 05:07:00', 'San Diego'),
-('shouldervouch', 'RIap0h8I7zRDAd7l', '2026-03-26 07:08:00', 'San Jose'),
-('decorationsbarbers', '&EfIslB9FVGXb$ze', '2026-03-27 08:43:03', 'Fresno'),
-('bubbleshorts', 'cfMwQASK0d8wxKQz', '2026-04-07 09:06:06', 'San Jose');
-
 SELECT * FROM Staff; 
 SELECT * FROM Books; 
 SELECT * FROM Movies; 
@@ -188,5 +210,4 @@ SELECT * FROM Members;
 SELECT * FROM Bookshold; 
 SELECT * FROM Movieshold; 
 SELECT * FROM Users; 
-
 
