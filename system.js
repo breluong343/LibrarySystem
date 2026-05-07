@@ -41,4 +41,12 @@ function getNextID(table, idColumn, callback) {
     });
 }
 
-module.exports = { viewUser, addUser, getNextID };
+function checkLogin(username, password, callback) {
+    const sql = 'SELECT * FROM users WHERE Username = ? AND Password = ?';
+    db.query(sql, [username, password], (err, rows) => {
+        if (err) return callback(err);
+        callback(null, rows[0] || null);
+    })
+}
+
+module.exports = { checkLogin, viewUser, addUser, getNextID };
