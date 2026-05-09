@@ -1,6 +1,14 @@
 DROP DATABASE IF EXISTS OnlineLibrarySystem;
 CREATE DATABASE OnlineLibrarySystem;
 USE OnlineLibrarySystem;
+
+CREATE TABLE Users (
+    Username VARCHAR(100) PRIMARY KEY,
+    Password VARCHAR(100),
+    CreationDate DATETIME,
+    Location VARCHAR(100)
+);
+
 CREATE TABLE Books (
     Book_ID INT PRIMARY KEY,
     Title VARCHAR(50),
@@ -22,7 +30,8 @@ CREATE TABLE Movies (
 CREATE TABLE Members (
     Member_ID INT PRIMARY KEY,
     Username VARCHAR(50),
-    Address VARCHAR(100)
+    Address VARCHAR(100),
+    FOREIGN KEY (Username) REFERENCES Users(Username)
 );
 
 CREATE TABLE Staff (
@@ -30,7 +39,9 @@ CREATE TABLE Staff (
     Role ENUM('Manager','Assistant','Intern','Volunteer'),
     HoursWorked INT,
     Name VARCHAR(25),
-    Address VARCHAR(100)
+    Address VARCHAR(100), 
+    Username VARCHAR(100),
+    FOREIGN KEY (Username) REFERENCES Users(Username)
 );
 
 CREATE TABLE Bookshold (
@@ -49,13 +60,6 @@ CREATE TABLE Movieshold (
     PRIMARY KEY (Member_ID, Movie_ID, BorrowDate),
     FOREIGN KEY (Member_ID) REFERENCES Members(Member_ID),
     FOREIGN KEY (Movie_ID) REFERENCES Movies(Movie_ID)
-);
-
-CREATE TABLE Users (
-    Username VARCHAR(100) UNIQUE,
-    Password VARCHAR(100),
-    CreationDate DATETIME,
-    Location VARCHAR(100)
 );
 
 SELECT * FROM Staff; 
