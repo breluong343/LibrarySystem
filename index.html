@@ -61,11 +61,7 @@
     </div>
     <div class="status_bar">
         <span class="status_label">Viewing as: </span>
-        <select class="user_role" onchange="applyRole(this.value)">
-            <option value="member">Member</option>
-            <option value="staff">Staff</option>
-            <option value="admin">Admin</option>
-        </select>
+        <span id="role_label" class="user_role">Member</span>
     </div>
 </nav>
 
@@ -126,12 +122,15 @@
         <div class="card_list" id="movie_list"></div>
     </div>
 
-    <!-- MEMBERS — staff/admin only -->
-    <div class="section" id="section_members" data-role="staff">
+    <!-- MEMBERS — staff only -->
+    <div class="section" id="section_members">
         <div class="section_header">
             <h2 class="section_title">Members</h2>
-            <button class="edit_btn" data-role="admin"
-                    onclick="openOverlay('add_member')">+ Add Member</button>
+        </div>
+        <div class="search_bar">
+            <input type="text" id="member_search"
+                   placeholder="Search by username or ID..."
+                   oninput="showMembers()">
         </div>
         <div class="table_wrap">
             <table>
@@ -140,7 +139,7 @@
                         <th>ID</th>
                         <th>Username</th>
                         <th>Address</th>
-                        <th data-role="admin">Actions</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="members_table"></tbody>
@@ -148,8 +147,8 @@
         </div>
     </div>
 
-    <!-- STAFFS — staff/admin only -->
-    <div class="section" id="section_staffs" data-role="staff">
+    <!-- STAFFS — staff only -->
+    <div class="section" id="section_staffs">
         <div class="section_header">
             <h2 class="section_title">Staff</h2>
         </div>
@@ -178,7 +177,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th data-role="staff">Member</th>
+                        <th>Member</th>
                         <th>Item</th>
                         <th>Hold Date</th>
                         <th>Actions</th>
@@ -203,7 +202,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th data-role="staff">Member</th>
+                        <th>Member</th>
                         <th>Item</th>
                         <th>Borrow Date</th>
                         <th>Actions</th>
@@ -418,29 +417,7 @@
     </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     ADD MEMBER OVERLAY
-     ══════════════════════════════════════ -->
-<div class="overlay_section" id="add_member"
-     onclick="if(event.target===this) closeOverlay('add_member')">
-    <div class="input_section">
-        <h3 class="input_title">Add New Member</h3>
-        <div class="form_group">
-            <label class="form_label">Username</label>
-            <input class="input_form" id="new_username" placeholder="Username">
-        </div>
-        <div class="form_group">
-            <label class="form_label">Address</label>
-            <input class="input_form" id="new_address" placeholder="Address">
-        </div>
-        <div class="add_actions">
-            <button class="btn btn-secondary"
-                    onclick="closeOverlay('add_member')">Cancel</button>
-            <button class="btn btn-primary"
-                    onclick="submitAddMember()">Add Member</button>
-        </div>
-    </div>
-</div>
+
 
 </div><!-- end #main_page -->
 </body>

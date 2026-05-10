@@ -2,6 +2,7 @@ const { get } = require('node:http');
 const db = require('./db');
 const { getNextID } = require('./system');
 
+//View books/movies functions
 function viewAllBooks(callback) {
     db.query('SELECT * FROM books', (err, rows) => {
         callback(err, rows);
@@ -14,6 +15,7 @@ function viewAllMovies(callback) {
     });
 }
 
+//Delete books/movies functions
 function delBooks(bookID, callback) {
     const sql = 'DELETE FROM Books WHERE Book_ID = ?';
     db.query(sql, [bookID], (err, result) => {
@@ -28,7 +30,7 @@ function delMovies(movieID, callback) {
     });
 }
 
-
+//Add book/movie functions
 function addBooks(Book_ID, Title, ISBN, Author, Copies, Genre, Type, callback) {
     getNextID('books', 'Book_ID', (err, nextBookID) => {
         if (err) return callback(err);
@@ -53,27 +55,108 @@ function addMovies(Movie_ID, Title, Year, Rating, Genre, callback) {
     });
 }
 
+// Edit book/movie
+function editBook(Book_ID, Title, ISBN, Author, Copies, Genre, Type, callback) {
+    const sql = 'UPDATE Books SET Title = ?, Author = ?, Genre = ?, Type=?, Copies=? WHERE Book_ID=?';
+    db.query(sql, [Title, ISBN, Author, Copies, Genre, Type, Book_ID], (err, result) => {
+        callback(err, result);
+    });
+}
+
+function editMovie(Movie_ID, Title, Year, Rating, Genre, callback) {
+    const sql = 'UPDATE Movies SET Title = ?, Year = ?, Rating = ?, Genre=? WHERE Movie_ID=?';
+    db.query(sql, [Title, Year, Rating, Genre, Movie_ID], (err, result) => {
+        callback(err, result);
+    });
+}
+
+// Members functions
 function viewAllMembers(callback) {
     db.query('SELECT * FROM Members', (err, rows) => {
         callback(err, rows);
     }); 
 }
 
-function delMember(memberID, callback){
-    const bookhold_sql = `DELETE FROM Bookshold WHERE Member_ID = ?`;
-    const moviehold_sql = `DELETE FROM Movieshold WHERE Member_ID = ?`;
-    const sql = `DELETE FROM Members WHERE Member_ID = ?`;
-    db.query(bookhold_sql, [memberID], (err) => {
+function addUserMembers(memberID, address, username, password, creationDate, location, callback) {
+    const sql ='INSERT INTO Users (Username, Password, CreationDate, Location) VALUES (?,?,?,?)';
+    db.query(sql, [username, password, creationDate, location], (err) => {
         if (err) return callback(err);
-        db.query(moviehold_sql, [memberID], (err1) => {
+        getNextID('Members', 'Member_ID', (err, nextMemberID) => {
+            if (err) return callback(err);
+            memberID = nextMemberID;
+            const member_sql = 'INSERT INTO Members (Member_ID, Username, Address) VALUES (?,?,?)';
+            db.query(member_sql, [memberID, username, address], (err, result) => {
+                callback(err, result);
+            });
+        });
+    })  
+}
+
+function editMember(memberID, address, callback) {
+    const sql = 'UPDATE Members SET Address = ? WHERE Member_ID = ?';
+    db.query(sql, [address, memberID], (err, result) => {
+        callback(err,result);
+    })
+}
+
+function delMember(username, callback){
+    const bookhold_sql = `DELETE FROM Bookshold WHERE Member_ID = 
+                                                    (SELECT Member_ID
+                                                    FROM Members
+                                                    WHERE Username = ? )`;
+    const moviehold_sql = `DELETE FROM Movieshold WHERE Member_ID = 
+                                                    (SELECT Member_ID
+                                                    FROM Members
+                                                    WHERE Username = ? )`;
+    const user_sql = `DELETE FROM Users WHERE Username = ?`;
+    db.query(bookhold_sql, [username], (err) => {
+        if (err) return callback(err);
+        db.query(moviehold_sql, [username], (err1) => {
             if (err1) return callback(err1);
-            db.query(sql, [memberID], (err2, result) => {
+            db.query(user_sql, [username], (err2, result) => {
                 callback(err2, result);
-            })
-        })
+            });
+        });
     }); 
 }
 
+// Staffs functions 
+function viewAllStaffs(callback) {
+    db.query('SELECT * FROM Staffs', (err, rows) => {
+        callback(err, rows);
+    });
+}
+
+function addUserStaffs(staffID, role, hoursWorked, name, address, username, password, creationDate, location, callback) {
+    const sql ='INSERT INTO Users (Username, Password, CreationDate, Location) VALUES (?,?,?,?)';
+    db.query(sql, [username, password, creationDate, location], (err) => {
+        if (err) return callback(err);
+        getNextID('Staff', 'Staff_ID', (err, nextStaffID) => {
+            if (err) return callback(err);
+            staffID = nextStaffID;
+            const staff_sql = 'INSERT INTO Staff (Staff_ID, Role, HoursWorked, Name, Address, Username) VALUES (?,?,?,?,?,?)';
+            db.query(staff_sql, [staffID, role, hoursWorked, name, address, username], (err, result) => {
+                callback(err, result);
+            });
+        });
+    })
+}
+
+function editStaff(staffID, role, hoursWorked, name, address, callback) {
+    const sql = 'UPDATE Staffs SET Role = ?, HoursWorked = ?, Name = ?, Address = ? WHERE Staff_ID = ?';
+    db.query = (sql, [role, hoursWorked, name, address, staffID], (err, result) => {
+        callback(err, result);
+    })
+}
+
+function delStaffs(username, callback) {
+    const sql = 'DELETE FROM Users WHERE  Username = ?';
+    db.query(sql, [username], (err,result) => {
+        callback(err, result);
+    });
+}
+
+// Borrows functions
 function viewAllBorrows(callback){
     const sql = `
         SELECT bh.Member_ID, bh.Book_ID, NULL AS Movie_ID,
@@ -117,6 +200,7 @@ function checkoutMovie(memberID, movieID, borrowDate, callback) {
         { callback(err, result); });
 }
 
+// Return functions
 function returnBook(memberID, bookID, borrowDate, callback) {
     const sql = 'DELETE FROM Bookshold WHERE Member_ID = ? AND Book_ID = ? AND BorrowDate = ?';
     db.query(sql, [memberID, bookID, borrowDate], (err) => {
@@ -134,29 +218,15 @@ function returnMovie(memberID, movieID, borrowDate, callback){
     const sql = 'DELETE FROM Movieshold WHERE Member_ID = ? AND Movie_ID = ? AND BorrowDate = ?';
     db.query(sql, [memberID, movieID, borrowDate], (err) => {
         if (err) return callback(err);
-        db.query(
-            'UPDATE Movies SET Copies = Copies + 1 WHERE Movie_ID = ?',
-            [movieID], (err1) => {
-                callback(err1, { success: true });
-            }
-        );
     });
 }
 
-function editBook(Book_ID, Title, ISBN, Author, Copies, Genre, Type, callback) {
-    const sql = 'UPDATE Books SET Title = ?, Author = ?, Genre = ?, Type=?, Copies=? WHERE Book_ID=?';
-    db.query(sql, [Title, ISBN, Author, Copies, Genre, Type, Book_ID], (err, result) => {
-        callback(err, result);
-    });
-}
-
-function editMovie(Movie_ID, Title, Year, Rating, Genre, callback) {
-    const sql = 'UPDATE Movies SET Title = ?, Year = ?, Rating = ?, Genre=? WHERE Movie_ID=?';
-    db.query(sql, [Title, Year, Rating, Genre, Movie_ID], (err, result) => {
-        callback(err, result);
-    });
-}
-
-module.exports = { viewAllBooks, viewAllMovies, delBooks, addBooks, delMovies, addMovies, viewAllMembers, delMember, checkoutBook, viewAllBorrows, 
-    returnBook, returnMovie, checkoutMovie, editBook, editMovie
+module.exports = { viewAllBooks, viewAllMovies, viewAllMembers, viewAllBorrows, viewAllStaffs, 
+                    addBooks, addMovies, 
+                    delBooks, delMovies,
+                    checkoutBook, returnBook, 
+                    checkoutMovie, returnMovie, 
+                    editBook, editMovie,
+                    addUserMembers, delMember, editMember,
+                    addUserStaffs, delStaffs, editStaff
  };
