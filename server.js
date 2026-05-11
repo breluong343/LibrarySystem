@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const app = express();
@@ -130,18 +131,17 @@ app.get('/api/staff', (req, res) => {
 //Add new Staff
 app.post('/api/staff', (req, res) => {
     const { Role, HoursWorked, Name, Address, Username, Password, CreationDate, Location } = req.body;
-    const date = CreationDate || new Date.toISOString().split('T')[0];
+    const date = CreationDate || new Date().toISOString().split('T')[0];
     if (!Role || !HoursWorked || !Name || !Address || !Username || !Password || !date || !Location) 
         return res.status(400).json('All fields required! Please enter.');
-    staff.addUserStaffs(null, Role, HoursWorked, Name, Address, Username, Password, CreationDate, Location, (err) => {
+    staff.addUserStaffs(null, Role, HoursWorked, Name, Address, Username, Password, date, Location, (err, result) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'New Staff added!' });
+        res.json({ message: 'New Staff added!', staffID: result.staffID });
     });
 });
 
-app.delete('/api/staff', (req, res) => {
-    const { Username } = req.body;
-    staff.delStaffs(Username, (err) => { 
+app.delete('/api/staff/:id', (req, res) => {
+    staff.delStaffs(req.params.id, (err) => { 
         if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'Staff deleted!' });
     });
@@ -163,18 +163,17 @@ app.get('/api/members', (req, res) => {
 // Add new member
 app.post('/api/members', (req, res) => {
     const { Address, Username, Password, CreationDate, Location } = req.body;
-    const date = CreationDate || new Date.toISOString().split('T')[0];
+    const date = CreationDate || new Date().toISOString().split('T')[0];
     if (!Address || !Username || !Password || !date || !Location) 
         return res.status(400).json('All fields required! Please enter.');
-    staff.addUserMembers(null, Address, Username, Password, date, Location, (err) => {
+    staff.addUserMembers(null, Address, Username, Password, date, Location, (err, result) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'New Member added!' });
+        res.json({ message: 'New Member added!', memberID: result.memberID });
     });
 });
 
-app.delete('/api/members', (req, res) => {
-    const { Username } = req.body;
-    staff.delMember(Username, (err) => { 
+app.delete('/api/members/:id', (req, res) => {
+    staff.delMember(req.params.id, (err) => { 
         if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'Member deleted!' });
     });
@@ -227,6 +226,13 @@ app.delete('/api/borrows/movies', (req, res) => {
 });
 
 // Holds
+app.get('/api/holds', (req, res) => {
+    staff.viewAllHolds((err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
 app.post('/api/holds/books', (req, res) => {
     const { Book_ID, Member_ID } = req.body;
     member.createBookHold(Book_ID, Member_ID, (err) => {
@@ -235,14 +241,16 @@ app.post('/api/holds/books', (req, res) => {
     });
 });
 
-app.post('/api/holds/movies', (req, res) => {
-    const { Movie_ID, Member_ID } = req.body;
-    member.createMovieHold(Movie_ID, Member_ID, (err) => { 
+app.delete('/api/holds/books', (req, res) => {
+    const { Member_ID, Book_ID, BorrowDate } = req.body;
+    const date = BorrowDate || new Date().toISOString().split('T')[0];
+    staff.returnBookHold(Member_ID, Book_ID, date, (err) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'Movie hold added!' });
+        res.json({ message: 'Hold returned!' });
     });
 });
 
+// Console log for checking if server is running 
 const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

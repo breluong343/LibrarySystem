@@ -11,9 +11,7 @@
 
 <span class="web_title">Library System</span>
 
-<!-- ══════════════════════════════════════
-     LOGIN PAGE
-     ══════════════════════════════════════ -->
+<!--Login Page-->
 <div id="login_page">
     <div class="login_box">
         <p class="login_title">Login to Library System</p>
@@ -39,386 +37,450 @@
     </div>
 </div>
 
-<!-- ══════════════════════════════════════
-     MAIN PAGE
-     ══════════════════════════════════════ -->
-<div id="main_page" style="display:none;">
+<!--Main Page-->
+<div id="main_page" style="display: none;">
+    <div id="toast"></div>
+    <nav>
+        <div class="nav_tabs">
+            <button class="nav_tab active"
+                    onclick="showSection('books', this)">Books</button>
+            <button class="nav_tab"
+                    onclick="showSection('movies', this)">Movies</button>
+            <button class="nav_tab" data-role="staff"
+                    onclick="showSection('section_members', this)">Members</button>
+            <button class="nav_tab" data-role="staff"
+                    onclick="showSection('section_staffs', this)">Staffs</button>
+            <button class="nav_tab"
+                    onclick="showSection('section_holds', this)">Holds</button>
+            <button class="nav_tab"
+                    onclick="showSection('section_borrows', this)">Borrows</button>
+        </div>
+        <div class="status_bar">
+            <span class="status_label">Viewing as: </span>
+            <span id="role_label" class="user_role">Member</span>
+            <button class="btn logout_btn" id="logout" onclick="handleLogout()">Log out</button>
+        </div>
+    </nav>
 
-<nav>
-    <div class="nav_tabs">
-        <button class="nav_tab active"
-                onclick="showSection('books', this)">Books</button>
-        <button class="nav_tab"
-                onclick="showSection('movies', this)">Movies</button>
-        <button class="nav_tab" data-role="staff"
-                onclick="showSection('section_members', this)">Members</button>
-        <button class="nav_tab" data-role="staff"
-                onclick="showSection('section_staffs', this)">Staffs</button>
-        <button class="nav_tab"
-                onclick="showSection('section_holds', this)">Holds</button>
-        <button class="nav_tab"
-                onclick="showSection('section_borrows', this)">Borrows</button>
+    <main>
+        <!-- Books Page -->
+        <div class="section active" id="books">
+            <div class="section_header">
+                <h2 class="section_title">Books</h2>
+                <button class="edit_btn" data-role="staff"
+                        onclick="openOverlay('add_book')">+ Add Book</button>
+            </div>
+            <div class="search_bar">
+                <input type="text" id="book_search"
+                    placeholder="Search by title or author..."
+                    oninput="showBooks()">
+                <select id="book_genre" onchange="showBooks()">
+                    <option value="">All Genres</option>
+                    <option value="science fiction">Science Fiction</option>
+                    <option value="thriller">Thriller</option>
+                    <option value="academia novel">Academia Novel</option>
+                    <option value="historical fiction">Historical Fiction</option>
+                    <option value="literacy fiction">Literary Fiction</option>
+                    <option value="mystery">Mystery</option>
+                    <option value="contemporary fiction">Contemporary Fiction</option>
+                    <option value="non-fiction">Non-Fiction</option>
+                </select>
+                <select id="book_type" onchange="showBooks()">
+                    <option value="">All Types</option>
+                    <option value="Hardcover">Hardcover</option>
+                    <option value="ebook">Ebook</option>
+                    <option value="Paperback">Paperback</option>
+                    <option value="Audiobook">Audiobook</option>
+                </select>
+            </div>
+            <div class="card_list" id="book_list"></div>
+        </div>
+
+        <!--Movies Page-->
+        <div class="section" id="movies">
+            <div class="section_header">
+                <h2 class="section_title">Movies</h2>
+                <button class="edit_btn" data-role="staff"
+                        onclick="openOverlay('add_movie')">+ Add Movie</button>
+            </div>
+            <div class="search_bar">
+                <input type="text" id="movie_search"
+                    placeholder="Search by title..."
+                    oninput="showMovies()">
+                <select id="movie_genre" onchange="showMovies()">
+                    <option value="">All Genres</option>
+                    <option value="comedy">Comedy</option>
+                    <option value="action">Action</option>
+                    <option value="adventure">Adventure</option>
+                    <option value="drama">Drama</option>
+                </select>
+            </div>
+            <div class="card_list" id="movie_list"></div>
+        </div>
+
+        <!--Members (for staffs)-->
+        <div class="section" id="section_members">
+            <div class="section_header">
+                <h2 class="section_title">Members</h2>
+                <button class="edit_btn" data-role="staff"
+                        onclick="openOverlay('add_member')">+ Add Member</button>
+            </div>
+            <div class="search_bar">
+                <input type="text" id="member_search"
+                    placeholder="Search by username or ID..."
+                    oninput="showMembers()">
+            </div>
+            <div class="table_wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Address</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="members_table"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!--Staffs (for staffs)-->
+        <div class="section" id="section_staffs">
+            <div class="section_header">
+                <h2 class="section_title">Staff</h2>
+                <button class="edit_btn" data-role="staff"
+                        onclick="openOverlay('add_staff')">+ Add Staff</button>
+            </div>
+            <div class="table_wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Role</th>
+                            <th>Hours Worked</th>
+                            <th>Address</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="staff_table"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!--Holds Page-->
+        <div class="section" id="section_holds">
+            <div class="section_header">
+                <h2 class="section_title">Holds</h2>
+            </div>
+            <div class="table_wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Member</th>
+                            <th>Item</th>
+                            <th>Hold Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="holds_table"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!--Borrows Page-->
+        <div class="section" id="section_borrows">
+            <div class="section_header">
+                <h2 class="section_title">Borrow Records</h2>
+            </div>
+            <div class="search_bar">
+                <input type="text" id="borrow_search"
+                    placeholder="Search by member or title..."
+                    oninput="showBorrows()">
+            </div>
+            <div class="table_wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Member</th>
+                            <th>Item</th>
+                            <th>Borrow Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="borrows_table"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!--Borrow/Hold Overlay-->
+    <div class="overlay_section" id="action_overlay"
+        onclick="if(event.target===this) closeOverlay('action_overlay')">
+        <div class="input_section">
+            <h3 class="input_title" id="action_overlay_title">Borrow Item</h3>
+            <p id="action_overlay_item"
+            style="margin-bottom:1rem; color:var(--section-title); font-weight:600;"></p>
+            <input type="hidden" id="action_member_id">
+            <div class="add_actions">
+                <button class="btn btn-secondary"
+                        onclick="closeOverlay('action_overlay')">Cancel</button>
+                <button class="btn btn-primary"
+                        onclick="submitAction()">Confirm</button>
+            </div>
+        </div>
     </div>
-    <div class="status_bar">
-        <span class="status_label">Viewing as: </span>
-        <span id="role_label" class="user_role">Member</span>
-    </div>
-</nav>
 
-<main>
-
-    <!-- BOOKS -->
-    <div class="section active" id="books">
-        <div class="section_header">
-            <h2 class="section_title">Books</h2>
-            <button class="edit_btn" data-role="staff"
-                    onclick="openOverlay('add_book')">+ Add Book</button>
-        </div>
-        <div class="search_bar">
-            <input type="text" id="book_search"
-                   placeholder="Search by title or author..."
-                   oninput="showBooks()">
-            <select id="book_genre" onchange="showBooks()">
-                <option value="">All Genres</option>
-                <option value="science fiction">Science Fiction</option>
-                <option value="thriller">Thriller</option>
-                <option value="academia novel">Academia Novel</option>
-                <option value="historical fiction">Historical Fiction</option>
-                <option value="literacy fiction">Literary Fiction</option>
-                <option value="mystery">Mystery</option>
-                <option value="contemporary fiction">Contemporary Fiction</option>
-                <option value="non-fiction">Non-Fiction</option>
-            </select>
-            <select id="book_type" onchange="showBooks()">
-                <option value="">All Types</option>
-                <option value="Hardcover">Hardcover</option>
-                <option value="ebook">Ebook</option>
-                <option value="Paperback">Paperback</option>
-                <option value="Audiobook">Audiobook</option>
-            </select>
-        </div>
-        <div class="card_list" id="book_list"></div>
-    </div>
-
-    <!-- MOVIES -->
-    <div class="section" id="movies">
-        <div class="section_header">
-            <h2 class="section_title">Movies</h2>
-            <button class="edit_btn" data-role="staff"
-                    onclick="openOverlay('add_movie')">+ Add Movie</button>
-        </div>
-        <div class="search_bar">
-            <input type="text" id="movie_search"
-                   placeholder="Search by title..."
-                   oninput="showMovies()">
-            <select id="movie_genre" onchange="showMovies()">
-                <option value="">All Genres</option>
-                <option value="comedy">Comedy</option>
-                <option value="action">Action</option>
-                <option value="adventure">Adventure</option>
-                <option value="drama">Drama</option>
-            </select>
-        </div>
-        <div class="card_list" id="movie_list"></div>
-    </div>
-
-    <!-- MEMBERS — staff only -->
-    <div class="section" id="section_members">
-        <div class="section_header">
-            <h2 class="section_title">Members</h2>
-        </div>
-        <div class="search_bar">
-            <input type="text" id="member_search"
-                   placeholder="Search by username or ID..."
-                   oninput="showMembers()">
-        </div>
-        <div class="table_wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Username</th>
-                        <th>Address</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="members_table"></tbody>
-            </table>
+    <!--Edit Book Overlay-->
+    <div class="overlay_section" id="edit_book_overlay"
+        onclick="if(event.target===this) closeOverlay('edit_book_overlay')">
+        <div class="input_section">
+            <h3 class="input_title">Edit Book</h3>
+            <input type="hidden" id="edit_book_id">
+            <div class="form_group">
+                <label class="form_label">Title</label>
+                <input class="input_form" id="edit_book_title">
+            </div>
+            <div class="form_group">
+                <label class="form_label">Author</label>
+                <input class="input_form" id="edit_book_author">
+            </div>
+            <div class="form_group">
+                <label class="form_label">Genre</label>
+                <select class="input_form" id="edit_book_genre">
+                    <option value="science fiction">Science Fiction</option>
+                    <option value="thriller">Thriller</option>
+                    <option value="academia novel">Academia Novel</option>
+                    <option value="historical fiction">Historical Fiction</option>
+                    <option value="literacy fiction">Literary Fiction</option>
+                    <option value="mystery">Mystery</option>
+                    <option value="contemporary fiction">Contemporary Fiction</option>
+                    <option value="non-fiction">Non-Fiction</option>
+                </select>
+            </div>
+            <div class="form_group">
+                <label class="form_label">Type</label>
+                <select class="input_form" id="edit_book_type">
+                    <option value="Hardcover">Hardcover</option>
+                    <option value="ebook">Ebook</option>
+                    <option value="Paperback">Paperback</option>
+                    <option value="Audiobook">Audiobook</option>
+                </select>
+            </div>
+            <div class="form_group">
+                <label class="form_label">Copies</label>
+                <input class="input_form" id="edit_book_copies" type="number" min="0">
+            </div>
+            <div class="add_actions">
+                <button class="btn btn-secondary"
+                        onclick="closeOverlay('edit_book_overlay')">Cancel</button>
+                <button class="btn btn-primary"
+                        onclick="submitEditBook()">Save Changes</button>
+            </div>
         </div>
     </div>
 
-    <!-- STAFFS — staff only -->
-    <div class="section" id="section_staffs">
-        <div class="section_header">
-            <h2 class="section_title">Staff</h2>
-        </div>
-        <div class="table_wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Role</th>
-                        <th>Hours Worked</th>
-                        <th>Address</th>
-                    </tr>
-                </thead>
-                <tbody id="staff_table"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- HOLDS — all roles, filtered in app.js -->
-    <div class="section" id="section_holds">
-        <div class="section_header">
-            <h2 class="section_title">Holds</h2>
-        </div>
-        <div class="table_wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Member</th>
-                        <th>Item</th>
-                        <th>Hold Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="holds_table"></tbody>
-            </table>
+    <!--Edit Movie Overlay-->
+    <div class="overlay_section" id="edit_movie_overlay"
+        onclick="if(event.target===this) closeOverlay('edit_movie_overlay')">
+        <div class="input_section">
+            <h3 class="input_title">Edit Movie</h3>
+            <input type="hidden" id="edit_movie_id">
+            <div class="form_group">
+                <label class="form_label">Title</label>
+                <input class="input_form" id="edit_movie_title">
+            </div>
+            <div class="form_group">
+                <label class="form_label">Year</label>
+                <input class="input_form" id="edit_movie_year" type="number">
+            </div>
+            <div class="form_group">
+                <label class="form_label">Rating</label>
+                <input class="input_form" id="edit_movie_rating"
+                    type="number" step="0.1" min="0" max="10">
+            </div>
+            <div class="form_group">
+                <label class="form_label">Genre</label>
+                <select class="input_form" id="edit_movie_genre">
+                    <option value="comedy">Comedy</option>
+                    <option value="action">Action</option>
+                    <option value="adventure">Adventure</option>
+                    <option value="drama">Drama</option>
+                </select>
+            </div>
+            <div class="add_actions">
+                <button class="btn btn-secondary"
+                        onclick="closeOverlay('edit_movie_overlay')">Cancel</button>
+                <button class="btn btn-primary"
+                        onclick="submitEditMovie()">Save Changes</button>
+            </div>
         </div>
     </div>
 
-    <!-- BORROWS — all roles, filtered in app.js -->
-    <div class="section" id="section_borrows">
-        <div class="section_header">
-            <h2 class="section_title">Borrow Records</h2>
-        </div>
-        <div class="search_bar">
-            <input type="text" id="borrow_search"
-                   placeholder="Search by member or title..."
-                   oninput="showBorrows()">
-        </div>
-        <div class="table_wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Member</th>
-                        <th>Item</th>
-                        <th>Borrow Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="borrows_table"></tbody>
-            </table>
+    <!--Add Book Overlay-->
+    <div class="overlay_section" id="add_book"
+        onclick="if(event.target===this) closeOverlay('add_book')">
+        <div class="input_section">
+            <h3 class="input_title">Add New Book</h3>
+            <div class="form_group">
+                <label class="form_label">Title</label>
+                <input class="input_form" id="new_title" placeholder="Book Title">
+            </div>
+            <div class="form_group">
+                <label class="form_label">Author</label>
+                <input class="input_form" id="new_author" placeholder="Author">
+            </div>
+            <div class="form_group">
+                <label class="form_label">ISBN</label>
+                <input class="input_form" id="new_isbn" placeholder="ISBN">
+            </div>
+            <div class="form_group">
+                <label class="form_label">Genre</label>
+                <select class="input_form" id="new_genre">
+                    <option value="science fiction">Science Fiction</option>
+                    <option value="thriller">Thriller</option>
+                    <option value="academia novel">Academia Novel</option>
+                    <option value="historical fiction">Historical Fiction</option>
+                    <option value="literacy fiction">Literary Fiction</option>
+                    <option value="mystery">Mystery</option>
+                    <option value="contemporary fiction">Contemporary Fiction</option>
+                    <option value="non-fiction">Non-Fiction</option>
+                </select>
+            </div>
+            <div class="form_group">
+                <label class="form_label">Type</label>
+                <select class="input_form" id="new_type">
+                    <option value="Hardcover">Hardcover</option>
+                    <option value="ebook">Ebook</option>
+                    <option value="Paperback">Paperback</option>
+                    <option value="Audiobook">Audiobook</option>
+                </select>
+            </div>
+            <div class="form_group">
+                <label class="form_label">Copies</label>
+                <input class="input_form" id="new_copies"
+                    type="number" placeholder="Number of copies" min="1">
+            </div>
+            <div class="add_actions">
+                <button class="btn btn-secondary"
+                        onclick="closeOverlay('add_book')">Cancel</button>
+                <button class="btn btn-primary"
+                        onclick="submitAddBook()">Add Book</button>
+            </div>
         </div>
     </div>
 
-</main>
+    <!--Add Movie Overlay-->
+    <div class="overlay_section" id="add_movie"
+        onclick="if(event.target===this) closeOverlay('add_movie')">
+        <div class="input_section">
+            <h3 class="input_title">Add New Movie</h3>
+            <div class="form_group">
+                <label class="form_label">Title</label>
+                <input class="input_form" id="new_movie_title" placeholder="Movie Title">
+            </div>
+            <div class="form_group">
+                <label class="form_label">Year</label>
+                <input class="input_form" id="new_year" type="number" placeholder="Year">
+            </div>
+            <div class="form_group">
+                <label class="form_label">Rating</label>
+                <input class="input_form" id="new_rating"
+                    type="number" step="0.1" min="0" max="10" placeholder="e.g. 8.5">
+            </div>
+            <div class="form_group">
+                <label class="form_label">Genre</label>
+                <select class="input_form" id="new_movie_genre">
+                    <option value="comedy">Comedy</option>
+                    <option value="action">Action</option>
+                    <option value="adventure">Adventure</option>
+                    <option value="drama">Drama</option>
+                </select>
+            </div>
+            <div class="add_actions">
+                <button class="btn btn-secondary"
+                        onclick="closeOverlay('add_movie')">Cancel</button>
+                <button class="btn btn-primary"
+                        onclick="submitAddMovie()">Add Movie</button>
+            </div>
+        </div>
+    </div>
 
-<!-- ══════════════════════════════════════
-     BORROW / HOLD OVERLAY
-     ══════════════════════════════════════ -->
-<div class="overlay_section" id="action_overlay"
-     onclick="if(event.target===this) closeOverlay('action_overlay')">
-    <div class="input_section">
-        <h3 class="input_title" id="action_overlay_title">Borrow Item</h3>
-        <p id="action_overlay_item"
-           style="margin-bottom:1rem; color:var(--section-title); font-weight:600;"></p>
-        <input type="hidden" id="action_member_id">
-        <div class="add_actions">
-            <button class="btn btn-secondary"
-                    onclick="closeOverlay('action_overlay')">Cancel</button>
-            <button class="btn btn-primary"
-                    onclick="submitAction()">Confirm</button>
+    <!-- Add New Member -->
+    <div class="overlay_section" id="add_member" onclick="if(event.target===this) closeOverlay('add_member')"> 
+        <div class="input_section">
+            <h3 class="input_title">Add New Member</h3>
+            <div class="form_group">
+                <label class="form_label">Username</label>
+                <input class="input_form" id="new_member_username" placeholder="Enter new username...">
+            </div>
+            <div class="form_group">
+                <label class="form_label">Address</label>
+                <input class="input_form" id="new_member_address" placeholder="Enter address...">
+            </div>
+            <div class="form_group">
+                <label class="form_label">Password</label>
+                <input class="input_form" id="new_member_password" placeholder="Enter new password...">
+            </div>
+            <div class="form_group">
+                <label class="form_label">Location</label>
+                <input class="input_form" id="new_member_location" placeholder="Enter registered city...">
+            </div>
+            <div class="add_actions">
+                <button class="btn btn-secondary"
+                        onclick="closeOverlay('add_member')">Cancel</button>
+                <button class="btn btn-primary"
+                        onclick="submitAddMember()">Add Member</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add New Staff -->
+    <div class="overlay_section" id="add_staff" onclick="if(event.target===this) closeOverlay('add_staff')"> 
+        <div class="input_section">
+            <h3 class="input_title">Add New Staff</h3>
+            <div class="form_group">
+                <label class="form_label">Name</label>
+                <input class="input_form" id="new_staff_name" placeholder="Enter new staff name...">
+            </div>
+            <div class="form_group">
+                <label class="form_label">Role</label>
+                <select class="input_form" id="new_staff_role">
+                    <option value="Manager">Manager</option>
+                    <option value="Volunteer">Volunteer</option>
+                    <option value="Assistant">Assistant</option>
+                    <option value="Intern">Intern</option>
+                </select>
+            </div>
+            <div class="form_group">
+                <label class="form_label">Hours Worked</label>
+                <input class="input_form" id="new_staff_hours" type="number" placeholder="Enter number of hours worked...">
+            </div>
+            <div class="form_group">
+                <label class="form_label">Address</label>
+                <input class="input_form" id="new_staff_address" placeholder="Enter address...">
+            </div>
+            <div class="form_group">
+                <label class="form_label">Username</label>
+                <input class="input_form" id="new_staff_username" placeholder="Enter new username...">
+            </div>
+            <div class="form_group">
+                <label class="form_label">Password</label>
+                <input class="input_form" id="new_staff_password" placeholder="Enter new password...">
+            </div>
+            <div class="form_group">
+                <label class="form_label">Location</label>
+                <input class="input_form" id="new_staff_location" placeholder="Enter registered city...">
+            </div>
+            <div class="add_actions">
+                <button class="btn btn-secondary"
+                        onclick="closeOverlay('add_staff')">Cancel</button>
+                <button class="btn btn-primary"
+                        onclick="submitAddStaff()">Add Staff</button>
+            </div>
         </div>
     </div>
 </div>
-
-<!-- ══════════════════════════════════════
-     EDIT BOOK OVERLAY
-     ══════════════════════════════════════ -->
-<div class="overlay_section" id="edit_book_overlay"
-     onclick="if(event.target===this) closeOverlay('edit_book_overlay')">
-    <div class="input_section">
-        <h3 class="input_title">Edit Book</h3>
-        <input type="hidden" id="edit_book_id">
-        <div class="form_group">
-            <label class="form_label">Title</label>
-            <input class="input_form" id="edit_book_title">
-        </div>
-        <div class="form_group">
-            <label class="form_label">Author</label>
-            <input class="input_form" id="edit_book_author">
-        </div>
-        <div class="form_group">
-            <label class="form_label">Genre</label>
-            <select class="input_form" id="edit_book_genre">
-                <option value="science fiction">Science Fiction</option>
-                <option value="thriller">Thriller</option>
-                <option value="academia novel">Academia Novel</option>
-                <option value="historical fiction">Historical Fiction</option>
-                <option value="literacy fiction">Literary Fiction</option>
-                <option value="mystery">Mystery</option>
-                <option value="contemporary fiction">Contemporary Fiction</option>
-                <option value="non-fiction">Non-Fiction</option>
-            </select>
-        </div>
-        <div class="form_group">
-            <label class="form_label">Type</label>
-            <select class="input_form" id="edit_book_type">
-                <option value="Hardcover">Hardcover</option>
-                <option value="ebook">Ebook</option>
-                <option value="Paperback">Paperback</option>
-                <option value="Audiobook">Audiobook</option>
-            </select>
-        </div>
-        <div class="form_group">
-            <label class="form_label">Copies</label>
-            <input class="input_form" id="edit_book_copies" type="number" min="0">
-        </div>
-        <div class="add_actions">
-            <button class="btn btn-secondary"
-                    onclick="closeOverlay('edit_book_overlay')">Cancel</button>
-            <button class="btn btn-primary"
-                    onclick="submitEditBook()">Save Changes</button>
-        </div>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════
-     EDIT MOVIE OVERLAY
-     ══════════════════════════════════════ -->
-<div class="overlay_section" id="edit_movie_overlay"
-     onclick="if(event.target===this) closeOverlay('edit_movie_overlay')">
-    <div class="input_section">
-        <h3 class="input_title">Edit Movie</h3>
-        <input type="hidden" id="edit_movie_id">
-        <div class="form_group">
-            <label class="form_label">Title</label>
-            <input class="input_form" id="edit_movie_title">
-        </div>
-        <div class="form_group">
-            <label class="form_label">Year</label>
-            <input class="input_form" id="edit_movie_year" type="number">
-        </div>
-        <div class="form_group">
-            <label class="form_label">Rating</label>
-            <input class="input_form" id="edit_movie_rating"
-                   type="number" step="0.1" min="0" max="10">
-        </div>
-        <div class="form_group">
-            <label class="form_label">Genre</label>
-            <select class="input_form" id="edit_movie_genre">
-                <option value="comedy">Comedy</option>
-                <option value="action">Action</option>
-                <option value="adventure">Adventure</option>
-                <option value="drama">Drama</option>
-            </select>
-        </div>
-        <div class="add_actions">
-            <button class="btn btn-secondary"
-                    onclick="closeOverlay('edit_movie_overlay')">Cancel</button>
-            <button class="btn btn-primary"
-                    onclick="submitEditMovie()">Save Changes</button>
-        </div>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════
-     ADD BOOK OVERLAY
-     ══════════════════════════════════════ -->
-<div class="overlay_section" id="add_book"
-     onclick="if(event.target===this) closeOverlay('add_book')">
-    <div class="input_section">
-        <h3 class="input_title">Add New Book</h3>
-        <div class="form_group">
-            <label class="form_label">Title</label>
-            <input class="input_form" id="new_title" placeholder="Book Title">
-        </div>
-        <div class="form_group">
-            <label class="form_label">Author</label>
-            <input class="input_form" id="new_author" placeholder="Author">
-        </div>
-        <div class="form_group">
-            <label class="form_label">ISBN</label>
-            <input class="input_form" id="new_isbn" placeholder="ISBN">
-        </div>
-        <div class="form_group">
-            <label class="form_label">Genre</label>
-            <select class="input_form" id="new_genre">
-                <option value="science fiction">Science Fiction</option>
-                <option value="thriller">Thriller</option>
-                <option value="academia novel">Academia Novel</option>
-                <option value="historical fiction">Historical Fiction</option>
-                <option value="literacy fiction">Literary Fiction</option>
-                <option value="mystery">Mystery</option>
-                <option value="contemporary fiction">Contemporary Fiction</option>
-                <option value="non-fiction">Non-Fiction</option>
-            </select>
-        </div>
-        <div class="form_group">
-            <label class="form_label">Type</label>
-            <select class="input_form" id="new_type">
-                <option value="Hardcover">Hardcover</option>
-                <option value="ebook">Ebook</option>
-                <option value="Paperback">Paperback</option>
-                <option value="Audiobook">Audiobook</option>
-            </select>
-        </div>
-        <div class="form_group">
-            <label class="form_label">Copies</label>
-            <input class="input_form" id="new_copies"
-                   type="number" placeholder="Number of copies" min="1">
-        </div>
-        <div class="add_actions">
-            <button class="btn btn-secondary"
-                    onclick="closeOverlay('add_book')">Cancel</button>
-            <button class="btn btn-primary"
-                    onclick="submitAddBook()">Add Book</button>
-        </div>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════
-     ADD MOVIE OVERLAY
-     ══════════════════════════════════════ -->
-<div class="overlay_section" id="add_movie"
-     onclick="if(event.target===this) closeOverlay('add_movie')">
-    <div class="input_section">
-        <h3 class="input_title">Add New Movie</h3>
-        <div class="form_group">
-            <label class="form_label">Title</label>
-            <input class="input_form" id="new_movie_title" placeholder="Movie Title">
-        </div>
-        <div class="form_group">
-            <label class="form_label">Year</label>
-            <input class="input_form" id="new_year" type="number" placeholder="Year">
-        </div>
-        <div class="form_group">
-            <label class="form_label">Rating</label>
-            <input class="input_form" id="new_rating"
-                   type="number" step="0.1" min="0" max="10" placeholder="e.g. 8.5">
-        </div>
-        <div class="form_group">
-            <label class="form_label">Genre</label>
-            <select class="input_form" id="new_movie_genre">
-                <option value="comedy">Comedy</option>
-                <option value="action">Action</option>
-                <option value="adventure">Adventure</option>
-                <option value="drama">Drama</option>
-            </select>
-        </div>
-        <div class="add_actions">
-            <button class="btn btn-secondary"
-                    onclick="closeOverlay('add_movie')">Cancel</button>
-            <button class="btn btn-primary"
-                    onclick="submitAddMovie()">Add Movie</button>
-        </div>
-    </div>
-</div>
-
-
-
-</div><!-- end #main_page -->
 </body>
 </html>

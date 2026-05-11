@@ -100,7 +100,7 @@ CREATE TABLE Members (
     Member_ID INT PRIMARY KEY,
     Username VARCHAR(50),
     Address VARCHAR(100),
-    FOREIGN KEY (Username) REFERENCES Users(Username) ON DELETE CASCADE
+    FOREIGN KEY (Username) REFERENCES Users(Username)
 );
 INSERT INTO Members (Member_ID, Username, Address) VALUES
 (1000000, 'invincibleathletics', '654 Oxford Court Levittown, NY 11756'),
@@ -128,7 +128,7 @@ CREATE TABLE Staff (
     Name VARCHAR(25),
     Address VARCHAR(100), 
     Username VARCHAR(100),
-    FOREIGN KEY (Username) REFERENCES Users(Username) ON DELETE CASCADE
+    FOREIGN KEY (Username) REFERENCES Users(Username)
 );
 INSERT INTO Staff (Staff_ID, Role, HoursWorked, Name, Address, Username) VALUES
 (10000, 'Manager', 35, 'Alice Rey', '1001 E Santa Clara St, San Jose, CA 95116', 'eggoceanvulture'),
@@ -153,6 +153,7 @@ CREATE TABLE Bookshold (
     Member_ID INT,
     Book_ID INT,
     BorrowDate DATE,
+    Type VARCHAR(10) DEFAULT 'borrow',
     PRIMARY KEY (Member_ID, Book_ID, BorrowDate),
     FOREIGN KEY (Member_ID) REFERENCES Members(Member_ID),
     FOREIGN KEY (Book_ID) REFERENCES Books(Book_ID)

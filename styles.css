@@ -5,7 +5,7 @@
     --card-text: #1B211A;
     --nav-bg: rgb(202, 243, 186);
     --border: #546B41;
-    --card-bg: #E6EEC9;
+    --card-bg: rgb(230, 238, 201);
     --white: #FFFFFF;
     --nav-text: #404E3B;
     --nav-selection: #B0E4CC;
@@ -79,6 +79,29 @@ body {
     font-size: 0.8rem;
     color: var(--primary-text);
     font-family: 'Courier New', Courier, monospace;
+}
+
+/* Toast */
+#toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    color: #fff;
+    padding: 0.75rem 1.25rem;
+    border-radius: 5px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    z-index: 9999;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    opacity: 0;
+    transform: translateY(1rem);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+#toast.show {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 /* Nav Bar */
@@ -352,12 +375,31 @@ select {
     color: var(--border);
  }
 
+ .logout_btn {
+    cursor: pointer;
+    background: var(--danger-btn);
+    color: var(--white);
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 5px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+ }
+
+ .logout_btn:hover {
+    cursor: pointer;
+    background-color: rgba(255, 147, 126, 0.5);
+ }
+
  /* Tables */
 .table_wrap {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 5px;
-    overflow: hidden; 
+    overflow: visible; 
 }
 
 table {
@@ -374,7 +416,7 @@ thead tr {
 
 th {
     padding: 0.5rem 0.75rem;
-    text-align: left;
+    text-align: center;
     color: var(--white);
     font-weight: 600;
     text-transform: uppercase;
@@ -392,6 +434,13 @@ tr:last-child td {
     border-bottom: none;
 }
 
+.table_wrap .btn_danger {
+    margin: 0;
+    display: inline-block;
+    pointer-events: auto;
+    white-space: nowrap;
+}
+
 tr:hover td {
     color:rgba(28, 100, 0, 0.8);
 }
@@ -404,7 +453,7 @@ tr:hover td {
     align-items: center;
     justify-content: center;
     padding: auto;
-    background: var(--card-bg);
+    background: rgba(230, 238, 201, 0.7);
 }
 
 .overlay_section.open {

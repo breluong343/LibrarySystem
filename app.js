@@ -23,22 +23,12 @@ async function apiFetch(url, options = {}) {
 
 // Toast
 function showToast(msg, isError = false) {
-    let t = document.getElementById('_toast');
-    if (!t) {
-        t = document.createElement('div');
-        t.id = '_toast';
-        t.style.cssText = `
-            position:fixed; bottom:1.5rem; right:1.5rem;
-            color:#fff; padding:0.75rem 1.25rem; border-radius:5px;
-            font-family:'Courier New',monospace; font-size:0.9rem;
-            z-index:9999; opacity:0; transition:opacity 0.3s;
-            box-shadow:0 4px 12px rgba(0,0,0,0.2);`;
-        document.body.appendChild(t);
-    }
+    let t = document.getElementById('toast');
     t.style.background = isError ? '#c0392b' : 'rgba(28,100,0,0.85)';
     t.textContent      = msg;
-    t.style.opacity    = '1';
-    setTimeout(() => { t.style.opacity = '0'; }, 3000);
+    clearTimeout(t._hideTimer);
+    t.classList.add('show');
+    t._hideTimer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
 // Escape
@@ -81,14 +71,14 @@ async function handleLogin() {
         document.getElementById('login_page').style.display = 'none';
         document.getElementById('main_page').style.display  = 'block';
 
-        // Show role badge (read-only)
+        // Show role badge
         document.getElementById('role_label').textContent =
             currentRole === 'staff' ? 'Staff' : 'Member';
 
         applyNavRole();
         showBooks();
     } catch (err) {
-        errorEl.textContent = 'Cannot connect to server. Is it running?';
+        errorEl.textContent = 'Cannot connect to the server. Please try again!';
     }
 }
 
@@ -96,6 +86,29 @@ function handleReset() {
     document.getElementById('login_username').value    = '';
     document.getElementById('login_password').value    = '';
     document.getElementById('login_error').textContent = '';
+}
+
+function handleLogout() {
+    currentRole     = 'member'; 
+    currentUsername = '';
+    currentMemberID = null;    
+    cachedBooks     = [];
+    cachedMovies    = [];
+    pendingAction   = null;
+
+    document.getElementById('login_username').value = '';
+    document.getElementById('login_password').value    = '';
+    document.getElementById('login_error').textContent = '';
+
+    document.querySelector('.user_role').value = 'member';
+
+    document.getElementById('main_page').style.display = 'none';
+    document.getElementById('login_page').style.display = 'flex';
+
+    document.getSelectorAll('.nav_tab').forEach(t => t.classList.remove('active'));
+    document.getSelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getSelector('.nav_tab').classList.add('active');
+    document.getElementById('books')?.classList.add('active');
 }
 
 // User Role
@@ -389,37 +402,6 @@ async function submitAction() {
     } catch (err) {  }
 }
 
-// Members
-async function showMembers() {
-    const search  = document.getElementById('member_search')?.value.toLowerCase() || '';
-    const members = await apiFetch('/members').catch(() => []);
-    const tbody   = document.getElementById('members_table');
-    if (!tbody) return;
-
-    const filtered = members.filter(m =>
-        !search ||
-        m.Username?.toLowerCase().includes(search) ||
-        m.Member_ID?.toString().includes(search)
-    );
-
-    tbody.innerHTML = filtered.map(m => `<tr>
-        <td>${m.Member_ID}</td>
-        <td>${m.Username}</td>
-        <td>${m.Address || '—'}</td>
-        <td>
-            <button class="btn btn_danger"
-                onclick="deleteMember(${m.Member_ID})">Delete</button>
-        </td>
-    </tr>`).join('');
-}
-
-async function deleteMember(id) {
-    if (!confirm('Delete this member and all their records?')) return;
-    await apiFetch(`/members/${id}`, { method: 'DELETE' });
-    showToast('Member deleted');
-    showMembers();
-}
-
 // Borrows
 async function showBorrows() {
     const searchVal = document.getElementById('borrow_search')?.value.toLowerCase() || '';
@@ -457,7 +439,7 @@ async function showBorrows() {
 }
 
 async function removeBorrow(itemType, memberId, itemId, borrowDate) {
-    if (!confirm('Remove this record?')) return;
+    if (!confirm('Remove this borrow?')) return;
     const date = new Date(borrowDate).toISOString().split('T')[0];
 
     const endpoint = itemType === 'Book' ? '/borrows/books' : '/borrows/movies';
@@ -468,13 +450,13 @@ async function removeBorrow(itemType, memberId, itemId, borrowDate) {
         method: 'DELETE', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
     });
-    showToast('Record removed');
+    showToast('Borrow removed');
     showBorrows();
 }
 
 // Holds
 async function showHolds() {
-    const all = await apiFetch('/borrows').catch(() => []);
+    const all = await apiFetch('/holds').catch(() => []);
     const filtered = all.filter(h =>
         currentRole === 'member' ? h.MemberName === currentUsername : true
     );
@@ -495,12 +477,25 @@ async function showHolds() {
             <td>${h.BorrowDate ? new Date(h.BorrowDate).toLocaleDateString() : '—'}</td>
             <td>
                 <button class="btn btn_danger"
-                    onclick="removeBorrow('${h.ItemType}',${h.Member_ID},${itemId},'${h.BorrowDate}')">
+                    onclick="removeHold(${h.Member_ID},${itemId},'${h.BorrowDate}')">
                     Remove</button>
             </td>
         </tr>`;
     }).join('');
 }
+
+async function removeHold(memberId, itemId, borrowDate) {
+    if (!confirm('Remove this hold?')) return;
+    const date = new Date(borrowDate).toISOString().split('T')[0];
+    const body = { Member_ID: memberId, Book_ID: itemId, BorrowDate: date };
+    await apiFetch('/holds/books', {
+        method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    showToast('Hold removed');
+    showHolds();
+}
+
 // Staff
 async function showStaff() {
     const rows = await apiFetch('/staff').catch(() => []);
@@ -508,7 +503,7 @@ async function showStaff() {
     if (!tbody) return;
 
     if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">No staff found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">No staff found.</td></tr>';
         return;
     }
 
@@ -518,5 +513,100 @@ async function showStaff() {
         <td>${s.Role}</td>
         <td>${s.HoursWorked}</td>
         <td>${s.Address || '—'}</td>
+        <td>
+            <button class="btn btn_danger"
+                onclick="deleteStaff(${s.Staff_ID})">Delete</button>
+        </td>
     </tr>`).join('');
+}
+
+async function deleteStaff(id) {
+    if (!confirm('Delete this staff?')) return;
+    await apiFetch(`/staff/${id}`, { method: 'DELETE' });
+    showToast('Staff deleted');
+    showStaff();
+}
+
+async function submitAddStaff() {
+    const Role = document.getElementById('new_staff_role').value;
+    const HoursWorked = parseFloat(document.getElementById('new_staff_hours').value);
+    const Name = document.getElementById('new_staff_name').value.trim();
+    const Username  = document.getElementById('new_staff_username').value.trim();
+    const Address   = document.getElementById('new_staff_address').value;
+    const Password = document.getElementById('new_staff_password').value;
+    const Location  = document.getElementById('new_staff_location').value;
+    if (!HoursWorked) return showToast('Number of worked hours is required', true);
+    if (!Name) return showToast('Name is required', true);
+    if (!Username) return showToast('Username is required', true);
+    if (!Address) return showToast('Address is required', true);
+    if (!Password) return showToast('Password is required', true);
+    if (!Location) return showToast('Location is required', true);
+
+    await apiFetch('/staff', {
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Role, HoursWorked, Name, Address, Username, Password, Location })
+    });
+    showToast('Staff added!');
+    closeOverlay('add_staff');
+    showStaff();
+}
+
+// Members
+async function showMembers() {
+    const search = document.getElementById('member_search')?.value || '';
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+
+    const members = await apiFetch(`/members?${params}`).catch(() => []);
+    cachedMembers = members;
+
+    const tbody = document.getElementById('members_table');
+    if (!tbody) return;
+
+    if (!members.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No members found.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = members.map(m => {
+        let actionBtns = `<button class="btn btn_danger"
+                    onclick="deleteMember(${m.Member_ID})">
+                    Delete</button>`;
+
+        return `
+        <tr>
+            <td>${m.Member_ID}</td>
+            <td>${m.Username}</td>
+            <td>${m.Address || '—'}</td>
+            <td>${actionBtns}</td>
+        </tr>`
+    }).join('');
+}
+
+async function submitAddMember() {
+    const Username  = document.getElementById('new_member_username').value.trim();
+    const Address   = document.getElementById('new_member_address').value;
+    const Password = document.getElementById('new_member_password').value;
+    const Location  = document.getElementById('new_member_location').value;
+    if (!Username) return showToast('Username is required', true);
+    if (!Address) return showToast('Address is required', true);
+    if (!Password) return showToast('Password is required', true);
+    if (!Location) return showToast('Location is required', true);
+
+    await apiFetch('/members', {
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Username, Address, Password, Location })
+    });
+    showToast('Member added!');
+    closeOverlay('add_member');
+    showMembers();
+}
+
+async function deleteMember(id) {
+    if (!confirm('Delete this member and all their records?')) return;
+    await apiFetch(`/members/${id}`, { method: 'DELETE' });
+    showToast('Member deleted');
+    showMembers();
 }
