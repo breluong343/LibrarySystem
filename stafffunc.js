@@ -223,7 +223,7 @@ function checkoutMovie(memberID, movieID, borrowDate, callback) {
 
 // Return functions
 function returnBook(memberID, bookID, borrowDate, callback) {
-    const sql = 'DELETE FROM Bookshold WHERE Member_ID = ? AND Book_ID = ? AND BorrowDate = ? AND Type = "borrow';
+    const sql = 'DELETE FROM Bookshold WHERE Member_ID = ? AND Book_ID = ? AND BorrowDate = ? AND Type = "borrow"';
     db.query(sql, [memberID, bookID, borrowDate], (err) => {
         if (err) return callback(err);
         db.query(
