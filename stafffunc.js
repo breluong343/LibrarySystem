@@ -198,27 +198,42 @@ function viewAllHolds(callback){
 
 // Check out functions
 function checkoutBook(memberID, bookID, borrowDate, callback) {
-    const sql = 'SELECT Copies FROM Books WHERE Book_ID = ?';
-    db.query(sql, [bookID], (err, rows) => {
+    db.query('SELECT Copies FROM Books WHERE Book_ID = ?', [bookID], (err, rows) => {
         if (err) return callback(err);
         if (!rows.length || rows[0].Copies < 1) 
             return callback(new Error('No copies available'));
-        db.query(
-            'INSERT INTO Bookshold (Member_ID, Book_ID, BorrowDate) VALUES (?, ? , ?)', 
-            [memberID, bookID, borrowDate], (err1) => {
-                if (err1) return callback(err1);
-                db.query('UPDATE Books SET Copies = Copies - 1 WHERE Book_ID = ?', 
-                    [bookID], (err2) => { callback(err2, { success: true }); }
-                );
+        db.query('SELECT * FROM Bookshold WHERE Member_ID = ? AND Book_ID = ?', [memberID, bookID], (err1, rows) => {
+            if (err1) return callback(err1);
+            if (rows.length > 0) {
+                return callback(new Error('You have already borrow this book.'))
             }
-        );
+
+            db.query(
+                'INSERT INTO Bookshold (Member_ID, Book_ID, BorrowDate) VALUES (?, ? , ?)', 
+                [memberID, bookID, borrowDate], (err2) => {
+                    if (err1) return callback(err2);
+                    db.query('UPDATE Books SET Copies = Copies - 1 WHERE Book_ID = ?', 
+                        [bookID], (err3) => { callback(err3, { success: true }); }
+                    );
+                }
+            );
+        })
     });
 }
 
 function checkoutMovie(memberID, movieID, borrowDate, callback) {
-    const sql = 'INSERT INTO Movieshold (Member_ID, Movie_ID, BorrowDate) VALUES (?, ? , ?)';
-    db.query(sql, [memberID, movieID, borrowDate], (err,result) => 
-        { callback(err, result); });
+    db.query('SELECT * FROM Movieshold WHERE Member_ID = ? AND Movie_ID = ?', [memberID, movieID], (err, rows) => {
+        if (err) return callback(err);
+        if (rows.length > 0) {
+            return callback(new Error('You have already borrow this movie.'))
+        }
+
+        db.query(
+            'INSERT INTO Movieshold (Member_ID, Movie_ID, BorrowDate) VALUES (?, ? , ?)', 
+            [memberID, movieID, borrowDate], (err1) => {
+                callback(err1, { success: true});
+            });
+    });
 }
 
 // Return functions
