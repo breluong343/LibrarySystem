@@ -37,6 +37,8 @@ app.post('/api/login', (req, res) => {
 });
 
 // Books
+
+// View Books
 app.get('/api/books', (req, res) => {
     const { search, genre, type } = req.query;
     staff.viewAllBooks((err, books) => {
@@ -80,6 +82,7 @@ app.delete('/api/books/:id', (req, res) => {
 });
 
 // Movies
+// View Movies
 app.get('/api/movies', (req, res) => {
     const { search, genre } = req.query;
     staff.viewAllMovies((err, movies) => {
@@ -121,6 +124,7 @@ app.delete('/api/movies/:id', (req, res) => {
 });
 
 // Staffs
+//View Staffs
 app.get('/api/staff', (req, res) => {
     db.query('SELECT * FROM Staff', (err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -140,6 +144,7 @@ app.post('/api/staff', (req, res) => {
     });
 });
 
+// Delete a Staff
 app.delete('/api/staff/:id', (req, res) => {
     staff.delStaffs(req.params.id, (err) => { 
         if (err) return res.status(500).json({ error: err.message });
@@ -148,6 +153,7 @@ app.delete('/api/staff/:id', (req, res) => {
 });
 
 // Members
+// View Members
 app.get('/api/members', (req, res) => {
     const { search } = req.query;
     staff.viewAllMembers((err, members) => {
@@ -172,6 +178,7 @@ app.post('/api/members', (req, res) => {
     });
 });
 
+// Delete Member
 app.delete('/api/members/:id', (req, res) => {
     staff.delMember(req.params.id, (err) => { 
         if (err) return res.status(500).json({ error: err.message });
@@ -180,6 +187,7 @@ app.delete('/api/members/:id', (req, res) => {
 });
 
 // Borrows
+// View all Borrows
 app.get('/api/borrows', (req, res) => {
     staff.viewAllBorrows((err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -187,7 +195,7 @@ app.get('/api/borrows', (req, res) => {
     });
 });
 
-// Add Borrows
+// Add Borrows (Book)
 app.post('/api/borrows/books', (req, res) => {
     const { Member_ID, Book_ID, BorrowDate } = req.body;
     const date = BorrowDate || new Date().toISOString().split('T')[0];
@@ -197,6 +205,7 @@ app.post('/api/borrows/books', (req, res) => {
     });
 });
 
+// Add Borrows (Movie)
 app.post('/api/borrows/movies', (req, res) => {
     const { Member_ID, Movie_ID, BorrowDate } = req.body;
     const date = BorrowDate || new Date().toISOString().split('T')[0];
@@ -206,7 +215,7 @@ app.post('/api/borrows/movies', (req, res) => {
     });
 });
 
-// Delete Borrows
+// Delete Borrows (Books)
 app.delete('/api/borrows/books', (req, res) => {
     const { Member_ID, Book_ID, BorrowDate } = req.body;
     const date = BorrowDate || new Date().toISOString().split('T')[0];
@@ -216,6 +225,7 @@ app.delete('/api/borrows/books', (req, res) => {
     });
 });
 
+// Delete Borrows (Movies)
 app.delete('/api/borrows/movies', (req, res) => {
     const { Member_ID, Movie_ID, BorrowDate } = req.body;
     const date = BorrowDate ? new Date(BorrowDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
@@ -226,6 +236,7 @@ app.delete('/api/borrows/movies', (req, res) => {
 });
 
 // Holds
+// View all Holds
 app.get('/api/holds', (req, res) => {
     staff.viewAllHolds((err, rows) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -233,6 +244,7 @@ app.get('/api/holds', (req, res) => {
     });
 });
 
+// Add a book hold
 app.post('/api/holds/books', (req, res) => {
     const { Book_ID, Member_ID } = req.body;
     member.createBookHold(Book_ID, Member_ID, (err) => {
@@ -241,6 +253,7 @@ app.post('/api/holds/books', (req, res) => {
     });
 });
 
+// Delete a Book hold
 app.delete('/api/holds/books', (req, res) => {
     const { Member_ID, Book_ID, BorrowDate } = req.body;
     const date = BorrowDate || new Date().toISOString().split('T')[0];

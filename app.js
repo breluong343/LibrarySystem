@@ -1,6 +1,6 @@
 const API = 'http://localhost:3000/api';
 
-// State
+// States
 let currentRole     = 'member'; 
 let currentUsername = '';
 let currentMemberID = null;    
@@ -62,7 +62,7 @@ async function handleLogin() {
             return;
         }
 
-        // Save state — role and memberID come from server
+        // Save state
         currentUsername = data.username;
         currentRole     = data.role;       
         currentMemberID = data.memberID;    
@@ -82,12 +82,14 @@ async function handleLogin() {
     }
 }
 
+// Reset btn on Login page
 function handleReset() {
     document.getElementById('login_username').value    = '';
     document.getElementById('login_password').value    = '';
     document.getElementById('login_error').textContent = '';
 }
 
+// Logout from main page, back to login page
 function handleLogout() {
     currentRole     = 'member'; 
     currentUsername = '';
@@ -111,7 +113,7 @@ function handleLogout() {
     document.getElementById('books')?.classList.add('active');
 }
 
-// User Role
+// Apply user role to display on navigation bar
 function applyNavRole() {
     document.querySelectorAll('[data-role="staff"]').forEach(el => {
         if (el.classList.contains('section')) return;
@@ -139,11 +141,13 @@ function renderSection(id) {
     }
 }
 
-// Overlays
+// Overlay Sections 
 function openOverlay(id)  { document.getElementById(id)?.classList.add('open');    }
 function closeOverlay(id) { document.getElementById(id)?.classList.remove('open'); }
 
 // Books
+
+// Show all books
 async function showBooks() {
     const search = document.getElementById('book_search')?.value || '';
     const genre  = document.getElementById('book_genre')?.value  || '';
@@ -164,11 +168,12 @@ async function showBooks() {
         return;
     }
 
-    // Buttons are decided by currentRole at render time — no data-role hiding needed
+    // Show Books page based on roles (staff or member)
     list.innerHTML = books.map(b => {
         const available = b.Copies > 0;
         let actionBtns = '';
 
+        // Staff
         if (isStaff()) {
             actionBtns = `
                 <button class="btn btn-secondary"
@@ -203,6 +208,7 @@ async function showBooks() {
     }).join('');
 }
 
+// Handle add book
 async function submitAddBook() {
     const Title  = document.getElementById('new_title').value.trim();
     const Author = document.getElementById('new_author').value.trim();
@@ -221,6 +227,7 @@ async function submitAddBook() {
     showBooks();
 }
 
+// Open overlay for editing book
 function openEditBook(id, title, author, genre, type, copies) {
     document.getElementById('edit_book_id').value     = id;
     document.getElementById('edit_book_title').value  = title;
@@ -231,6 +238,7 @@ function openEditBook(id, title, author, genre, type, copies) {
     openOverlay('edit_book_overlay');
 }
 
+// Handle edit book
 async function submitEditBook() {
     const id     = document.getElementById('edit_book_id').value;
     const Title  = document.getElementById('edit_book_title').value.trim();
@@ -249,6 +257,7 @@ async function submitEditBook() {
     showBooks();
 }
 
+// Handle delete book
 async function deleteBook(id) {
     if (!confirm('Delete this book?')) return;
     await apiFetch(`/books/${id}`, { method: 'DELETE' });
@@ -257,6 +266,8 @@ async function deleteBook(id) {
 }
 
 // Movies
+
+// Show all movies
 async function showMovies() {
     const search = document.getElementById('movie_search')?.value || '';
     const genre  = document.getElementById('movie_genre')?.value  || '';
@@ -269,12 +280,13 @@ async function showMovies() {
 
     const list = document.getElementById('movie_list');
     if (!list) return;
-
+    
     if (!movies.length) {
         list.innerHTML = '<div class="empty"><p>No movies found.</p></div>';
         return;
     }
 
+    // Show Movies page based on roles (staff or member)
     list.innerHTML = movies.map(m => {
         let actionBtns = '';
 
@@ -304,6 +316,7 @@ async function showMovies() {
     }).join('');
 }
 
+// Handle add movie
 async function submitAddMovie() {
     const Title  = document.getElementById('new_movie_title').value.trim();
     const Year   = parseInt(document.getElementById('new_year').value);
@@ -320,6 +333,7 @@ async function submitAddMovie() {
     showMovies();
 }
 
+// Open overlay for edit movie
 function openEditMovie(id, title, year, rating, genre) {
     document.getElementById('edit_movie_id').value     = id;
     document.getElementById('edit_movie_title').value  = title;
@@ -329,6 +343,7 @@ function openEditMovie(id, title, year, rating, genre) {
     openOverlay('edit_movie_overlay');
 }
 
+// Handle edit movie
 async function submitEditMovie() {
     const id     = document.getElementById('edit_movie_id').value;
     const Title  = document.getElementById('edit_movie_title').value.trim();
@@ -346,6 +361,7 @@ async function submitEditMovie() {
     showMovies();
 }
 
+// Handle delete movie
 async function deleteMovie(id) {
     if (!confirm('Delete this movie?')) return;
     await apiFetch(`/movies/${id}`, { method: 'DELETE' });
@@ -354,6 +370,8 @@ async function deleteMovie(id) {
 }
 
 //Borrow/Hold
+
+//Open overlay
 async function openActionOverlay(actionType, itemType, itemId, itemTitle) {
     if (currentMemberID === null || currentMemberID === undefined) {
         showToast(`"${currentUsername}" has no member record — log in as a member account.`, true);
@@ -367,6 +385,7 @@ async function openActionOverlay(actionType, itemType, itemId, itemTitle) {
     openOverlay('action_overlay');
 }
 
+//Handle submit button 
 async function submitAction() {
     if (!pendingAction) return;
     const { actionType, itemType, itemId } = pendingAction;
@@ -403,6 +422,7 @@ async function submitAction() {
 }
 
 // Borrows
+// Show all borrows
 async function showBorrows() {
     const searchVal = document.getElementById('borrow_search')?.value.toLowerCase() || '';
     const all       = await apiFetch('/borrows').catch(() => []);
@@ -438,6 +458,7 @@ async function showBorrows() {
     }).join('');
 }
 
+// Handle book/movie return (for borrows)
 async function removeBorrow(itemType, memberId, itemId, borrowDate) {
     if (!confirm('Remove this borrow?')) return;
     const date = new Date(borrowDate).toISOString().split('T')[0];
@@ -459,6 +480,7 @@ async function removeBorrow(itemType, memberId, itemId, borrowDate) {
 }
 
 // Holds
+// Show all holds
 async function showHolds() {
     const all = await apiFetch('/holds').catch(() => []);
     const filtered = all.filter(h =>
@@ -488,6 +510,7 @@ async function showHolds() {
     }).join('');
 }
 
+// Hanle book hold return
 async function removeHold(memberId, itemId, borrowDate) {
     if (!confirm('Remove this hold?')) return;
     const date = new Date(borrowDate).toISOString().split('T')[0];
@@ -500,7 +523,8 @@ async function removeHold(memberId, itemId, borrowDate) {
     showHolds();
 }
 
-// Staff
+// Staff (staffs access only)
+// Show all staffs
 async function showStaff() {
     const rows = await apiFetch('/staff').catch(() => []);
     const tbody = document.getElementById('staff_table');
@@ -524,6 +548,7 @@ async function showStaff() {
     </tr>`).join('');
 }
 
+// Delete a staff 
 async function deleteStaff(id) {
     if (!confirm('Delete this staff?')) return;
     await apiFetch(`/staff/${id}`, { method: 'DELETE' });
@@ -531,6 +556,7 @@ async function deleteStaff(id) {
     showStaff();
 }
 
+// Handle add staff
 async function submitAddStaff() {
     const Role = document.getElementById('new_staff_role').value;
     const HoursWorked = parseFloat(document.getElementById('new_staff_hours').value);
@@ -556,7 +582,8 @@ async function submitAddStaff() {
     showStaff();
 }
 
-// Members
+// Members (staffs access only)
+// Show all members
 async function showMembers() {
     const search = document.getElementById('member_search')?.value || '';
     const params = new URLSearchParams();
@@ -588,6 +615,7 @@ async function showMembers() {
     }).join('');
 }
 
+// Handle add member
 async function submitAddMember() {
     const Username  = document.getElementById('new_member_username').value.trim();
     const Address   = document.getElementById('new_member_address').value;
@@ -608,6 +636,7 @@ async function submitAddMember() {
     showMembers();
 }
 
+// Handle delete member
 async function deleteMember(id) {
     if (!confirm('Delete this member and all their records?')) return;
     await apiFetch(`/members/${id}`, { method: 'DELETE' });

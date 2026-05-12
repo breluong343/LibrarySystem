@@ -1,5 +1,7 @@
 const mysql = require('mysql2');
 
+// Database connection configuration
+// Database credentials are stored in environment variables to keep sensitive data from source code
 const pool = mysql.createPool({
     host:     process.env.DB_HOST     || 'localhost',
     user:     process.env.DB_USER     || 'root',
