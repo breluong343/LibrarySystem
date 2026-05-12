@@ -1,14 +1,14 @@
 const API = 'http://localhost:3000/api';
 
-// ── STATE ─────────────────────────────────────────────────────
-let currentRole     = 'member';
+// State
+let currentRole     = 'member'; 
 let currentUsername = '';
+let currentMemberID = null;    
 let cachedBooks     = [];
 let cachedMovies    = [];
-let cachedMembers   = [];
 let pendingAction   = null;
 
-// ── API HELPER ────────────────────────────────────────────────
+// API
 async function apiFetch(url, options = {}) {
     try {
         const res  = await fetch(API + url, options);
@@ -21,35 +21,25 @@ async function apiFetch(url, options = {}) {
     }
 }
 
-// ── TOAST ─────────────────────────────────────────────────────
+// Toast
 function showToast(msg, isError = false) {
-    let t = document.getElementById('_toast');
-    if (!t) {
-        t = document.createElement('div');
-        t.id = '_toast';
-        t.style.cssText = `
-            position:fixed; bottom:1.5rem; right:1.5rem;
-            color:#fff; padding:0.75rem 1.25rem; border-radius:5px;
-            font-family:'Courier New',monospace; font-size:0.9rem;
-            z-index:9999; opacity:0; transition:opacity 0.3s;
-            box-shadow:0 4px 12px rgba(0,0,0,0.2);`;
-        document.body.appendChild(t);
-    }
+    let t = document.getElementById('toast');
     t.style.background = isError ? '#c0392b' : 'rgba(28,100,0,0.85)';
     t.textContent      = msg;
-    t.style.opacity    = '1';
-    setTimeout(() => { t.style.opacity = '0'; }, 3000);
+    clearTimeout(t._hideTimer);
+    t.classList.add('show');
+    t._hideTimer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-// ── ESCAPE HELPER ─────────────────────────────────────────────
-// Prevents single quotes in titles from breaking onclick attributes
+// Escape
 function escStr(str) {
-    return (str || '').replace(/'/g, "\\'");
+    return (str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 }
 
-// ══════════════════════════════════════════════════════════════
-// LOGIN
-// ══════════════════════════════════════════════════════════════
+// Role Setter
+function isStaff() { return currentRole === 'staff'; }
+
+// Login
 async function handleLogin() {
     const username = document.getElementById('login_username').value.trim();
     const password = document.getElementById('login_password').value;
@@ -71,52 +61,65 @@ async function handleLogin() {
             errorEl.textContent = data.error || 'Invalid username or password.';
             return;
         }
-        // Save state
+
+        // Save state — role and memberID come from server
         currentUsername = data.username;
+        currentRole     = data.role;       
+        currentMemberID = data.memberID;    
 
         // Switch pages
         document.getElementById('login_page').style.display = 'none';
         document.getElementById('main_page').style.display  = 'block';
 
-        // Set role dropdown and apply visibility rules
-        document.querySelector('.user_role').value = data.role;
-        applyRole(data.role);
+        // Show role badge
+        document.getElementById('role_label').textContent =
+            currentRole === 'staff' ? 'Staff' : 'Member';
+
+        applyNavRole();
         showBooks();
     } catch (err) {
-        errorEl.textContent = 'Cannot connect to server. Is it running?';
+        errorEl.textContent = 'Cannot connect to the server. Please try again!';
     }
 }
 
 function handleReset() {
-    document.getElementById('login_username').value  = '';
-    document.getElementById('login_password').value  = '';
+    document.getElementById('login_username').value    = '';
+    document.getElementById('login_password').value    = '';
     document.getElementById('login_error').textContent = '';
 }
 
-// ══════════════════════════════════════════════════════════════
-// ROLE
-// admin  → sees everything
-// staff  → sees staff + member elements
-// member → sees only member elements
-// ══════════════════════════════════════════════════════════════
-function applyRole(role) {
-    currentRole = role;
-    document.querySelectorAll('[data-role]').forEach(el => {
-        const required = el.getAttribute('data-role');
-        const visible =
-            role === 'admin' ? true :
-            role === 'staff' ? (required === 'staff' || required === 'member') :
-            required === 'member';
-        el.style.display = visible ? '' : 'none';
-    });
-    // Re-render active section so injected buttons also update
-    const active = document.querySelector('.section.active');
-    if (active) renderSection(active.id);
+function handleLogout() {
+    currentRole     = 'member'; 
+    currentUsername = '';
+    currentMemberID = null;    
+    cachedBooks     = [];
+    cachedMovies    = [];
+    pendingAction   = null;
+
+    document.getElementById('login_username').value = '';
+    document.getElementById('login_password').value    = '';
+    document.getElementById('login_error').textContent = '';
+
+    document.querySelector('.user_role').value = 'member';
+
+    document.getElementById('main_page').style.display = 'none';
+    document.getElementById('login_page').style.display = 'flex';
+
+    document.getSelectorAll('.nav_tab').forEach(t => t.classList.remove('active'));
+    document.getSelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getSelector('.nav_tab').classList.add('active');
+    document.getElementById('books')?.classList.add('active');
 }
 
-// ══════════════════════════════════════════════════════════════
-// NAVIGATION
-// ══════════════════════════════════════════════════════════════
+// User Role
+function applyNavRole() {
+    document.querySelectorAll('[data-role="staff"]').forEach(el => {
+        if (el.classList.contains('section')) return;
+        el.style.display = isStaff() ? '' : 'none';
+    });
+}
+
+// Nav Bar
 function showSection(sectionId, tabEl) {
     document.querySelectorAll('.nav_tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -127,22 +130,20 @@ function showSection(sectionId, tabEl) {
 
 function renderSection(id) {
     switch (id) {
-        case 'books':           showBooks();    break;
-        case 'movies':          showMovies();   break;
-        case 'section_members': showMembers();  break;
-        case 'section_staffs':  showStaff();    break;
-        case 'section_borrows': showBorrows();  break;
-        case 'section_holds':   showHolds();    break;
+        case 'books':           showBooks();   break;
+        case 'movies':          showMovies();  break;
+        case 'section_members': showMembers(); break;
+        case 'section_staffs':  showStaff();   break;
+        case 'section_borrows': showBorrows(); break;
+        case 'section_holds':   showHolds();   break;
     }
 }
 
-// ── OVERLAY HELPERS ───────────────────────────────────────────
+// Overlays
 function openOverlay(id)  { document.getElementById(id)?.classList.add('open');    }
 function closeOverlay(id) { document.getElementById(id)?.classList.remove('open'); }
 
-// ══════════════════════════════════════════════════════════════
-// BOOKS
-// ══════════════════════════════════════════════════════════════
+// Books
 async function showBooks() {
     const search = document.getElementById('book_search')?.value || '';
     const genre  = document.getElementById('book_genre')?.value  || '';
@@ -163,28 +164,29 @@ async function showBooks() {
         return;
     }
 
+    // Buttons are decided by currentRole at render time — no data-role hiding needed
     list.innerHTML = books.map(b => {
         const available = b.Copies > 0;
+        let actionBtns = '';
 
-        // Member only: Borrow if available, Hold if not
-        const borrowBtn = available
-            ? `<button class="btn btn-primary" data-role="member"
-                onclick="openActionOverlay('borrow','book',${b.Book_ID},'${escStr(b.Title)}')">
-                Borrow</button>`
-            : '';
-        const holdBtn = !available
-            ? `<button class="btn btn-secondary" data-role="member"
-                onclick="openActionOverlay('hold','book',${b.Book_ID},'${escStr(b.Title)}')">
-                Hold</button>`
-            : '';
-
-        // Staff/Admin only: Edit and Delete
-        const editBtn = `<button class="btn btn-secondary" data-role="staff"
-            onclick="openEditBook(${b.Book_ID},'${escStr(b.Title)}','${escStr(b.Author)}','${b.Genre}','${b.Type}',${b.Copies})">
-            Edit</button>`;
-        const delBtn = `<button class="btn btn_danger" data-role="staff"
-            onclick="deleteBook(${b.Book_ID})">
-            Delete</button>`;
+        if (isStaff()) {
+            actionBtns = `
+                <button class="btn btn-secondary"
+                    onclick="openEditBook(${b.Book_ID},'${escStr(b.Title)}','${escStr(b.Author)}','${escStr(b.Genre)}','${escStr(b.Type)}',${b.Copies})">
+                    Edit</button>
+                <button class="btn btn_danger"
+                    onclick="deleteBook(${b.Book_ID})">
+                    Delete</button>`;
+        } else {
+            // Member
+            actionBtns = available
+                ? `<button class="btn btn-primary"
+                    onclick="openActionOverlay('borrow','book',${b.Book_ID},'${escStr(b.Title)}')">
+                    Borrow</button>`
+                : `<button class="btn btn-secondary"
+                    onclick="openActionOverlay('hold','book',${b.Book_ID},'${escStr(b.Title)}')">
+                    Hold</button>`;
+        }
 
         return `
         <div class="item_card">
@@ -196,13 +198,9 @@ async function showBooks() {
                     ${available ? 'Available: ' + b.Copies : 'Unavailable'}
                 </p>
             </div>
-            <div class="card_actions">
-                ${borrowBtn}${holdBtn}${editBtn}${delBtn}
-            </div>
+            <div class="card_actions">${actionBtns}</div>
         </div>`;
     }).join('');
-
-    applyRole(currentRole);
 }
 
 async function submitAddBook() {
@@ -258,9 +256,7 @@ async function deleteBook(id) {
     showBooks();
 }
 
-// ══════════════════════════════════════════════════════════════
-// MOVIES
-// ══════════════════════════════════════════════════════════════
+// Movies
 async function showMovies() {
     const search = document.getElementById('movie_search')?.value || '';
     const genre  = document.getElementById('movie_genre')?.value  || '';
@@ -280,18 +276,21 @@ async function showMovies() {
     }
 
     list.innerHTML = movies.map(m => {
-        // Member only: movies always borrowable (no Copies limit)
-        const borrowBtn = `<button class="btn btn-primary" data-role="member"
-            onclick="openActionOverlay('borrow','movie',${m.Movie_ID},'${escStr(m.Title)}')">
-            Borrow</button>`;
+        let actionBtns = '';
 
-        // Staff/Admin only
-        const editBtn = `<button class="btn btn-secondary" data-role="staff"
-            onclick="openEditMovie(${m.Movie_ID},'${escStr(m.Title)}',${m.Year},${m.Rating},'${m.Genre}')">
-            Edit</button>`;
-        const delBtn = `<button class="btn btn_danger" data-role="staff"
-            onclick="deleteMovie(${m.Movie_ID})">
-            Delete</button>`;
+        if (isStaff()) {
+            actionBtns = `
+                <button class="btn btn-secondary"
+                    onclick="openEditMovie(${m.Movie_ID},'${escStr(m.Title)}',${m.Year},${m.Rating},'${escStr(m.Genre)}')">
+                    Edit</button>
+                <button class="btn btn_danger"
+                    onclick="deleteMovie(${m.Movie_ID})">
+                    Delete</button>`;
+        } else {
+            actionBtns = `<button class="btn btn-primary"
+                onclick="openActionOverlay('borrow','movie',${m.Movie_ID},'${escStr(m.Title)}')">
+                Borrow</button>`;
+        }
 
         return `
         <div class="item_card">
@@ -300,13 +299,9 @@ async function showMovies() {
                 <p class="card_text">${m.Year} | Rating: ${m.Rating}</p>
                 <p class="card_text">${m.Genre}</p>
             </div>
-            <div class="card_actions">
-                ${borrowBtn}${editBtn}${delBtn}
-            </div>
+            <div class="card_actions">${actionBtns}</div>
         </div>`;
     }).join('');
-
-    applyRole(currentRole);
 }
 
 async function submitAddMovie() {
@@ -358,31 +353,17 @@ async function deleteMovie(id) {
     showMovies();
 }
 
-// ══════════════════════════════════════════════════════════════
-// BORROW / HOLD ACTION OVERLAY
-// Opens when member clicks Borrow or Hold on a card
-// Auto-uses the logged-in member's own account
-// ══════════════════════════════════════════════════════════════
+//Borrow/Hold
 async function openActionOverlay(actionType, itemType, itemId, itemTitle) {
-    pendingAction = { actionType, itemType, itemId, itemTitle };
-
-    const members = await apiFetch('/members').catch(() => []);
-    cachedMembers = members;
-    const me = members.find(m => m.Username === currentUsername);
-
-    if (!me) {
-        showToast('Could not find your member account', true);
+    if (currentMemberID === null || currentMemberID === undefined) {
+        showToast(`"${currentUsername}" has no member record — log in as a member account.`, true);
         return;
     }
-
-    // Store member ID in a hidden field
-    document.getElementById('action_member_id').value = me.Member_ID;
-
+    pendingAction = { actionType, itemType, itemId, itemTitle };
+    document.getElementById('action_member_id').value = currentMemberID;
     document.getElementById('action_overlay_title').textContent =
         actionType === 'borrow' ? 'Borrow Item' : 'Place Hold';
-    document.getElementById('action_overlay_item').textContent =
-        `"${itemTitle}"`;
-
+    document.getElementById('action_overlay_item').textContent = `"${itemTitle}"`;
     openOverlay('action_overlay');
 }
 
@@ -394,67 +375,31 @@ async function submitAction() {
 
     try {
         if (actionType === 'borrow') {
-            if (itemType === 'book') {
-                await apiFetch('/borrows/books', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ Member_ID: memberId, Book_ID: itemId, BorrowDate: today })
-                });
-            } else {
-                await apiFetch('/borrows/movies', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ Member_ID: memberId, Movie_ID: itemId, BorrowDate: today })
-                });
-            }
+            const endpoint = itemType === 'book' ? '/borrows/books' : '/borrows/movies';
+            const body = itemType === 'book'
+                ? { Member_ID: memberId, Book_ID: itemId, BorrowDate: today }
+                : { Member_ID: memberId, Movie_ID: itemId, BorrowDate: today };
+            await apiFetch(endpoint, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
             showToast(itemType === 'book' ? 'Book borrowed!' : 'Movie borrowed!');
         } else {
-            if (itemType === 'book') {
-                await apiFetch('/holds/books', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ bookID: itemId, memberID: memberId })
-                });
-            } else {
-                await apiFetch('/holds/movies', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ movieID: itemId, memberID: memberId })
-                });
-            }
+            const endpoint = itemType === 'book' ? '/holds/books' : '/holds/movies';
+            const body = itemType === 'book'
+                ? { Book_ID: itemId, Member_ID: memberId }
+                : { Movie_ID: itemId, Member_ID: memberId };
+            await apiFetch(endpoint, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
             showToast('Hold placed!');
         }
         closeOverlay('action_overlay');
         pendingAction = null;
-        // Refresh current section
         const active = document.querySelector('.section.active');
         if (active) renderSection(active.id);
-    } catch (err) {
-        
-    }
-}
-
-// Members
-async function showMembers() {
-    const members = await apiFetch('/members').catch(() => []);
-    const tbody   = document.getElementById('members_table');
-    if (!tbody) return;
-
-    tbody.innerHTML = members.map(m => `<tr>
-        <td>${m.Member_ID}</td>
-        <td>${m.Username}</td>
-        <td>${m.Username}</td>
-        <td>${m.Address || '—'}</td>
-        <td data-role="admin">
-            <button class="btn btn_danger"
-                onclick="deleteMember(${m.Member_ID})">Delete</button>
-        </td>
-    </tr>`).join('');
-
-    applyRole(currentRole);
-}
-
-async function deleteMember(id) {
-    if (!confirm('Delete this member and all their records?')) return;
-    await apiFetch(`/members/${id}`, { method: 'DELETE' });
-    showToast('Member deleted');
-    showMembers();
+    } catch (err) {  }
 }
 
 // Borrows
@@ -463,13 +408,11 @@ async function showBorrows() {
     const all       = await apiFetch('/borrows').catch(() => []);
 
     const filtered = all.filter(b => {
-        const isMyRecord = currentRole === 'member'
-            ? b.MemberName === currentUsername
-            : true;
-        const matchSearch = !searchVal ||
+        const mine  = currentRole === 'member' ? b.MemberName === currentUsername : true;
+        const match = !searchVal ||
             b.MemberName?.toLowerCase().includes(searchVal) ||
             b.ItemTitle?.toLowerCase().includes(searchVal);
-        return isMyRecord && matchSearch;
+        return mine && match;
     });
 
     const tbody = document.getElementById('borrows_table');
@@ -480,45 +423,44 @@ async function showBorrows() {
         return;
     }
 
-    tbody.innerHTML = filtered.map(b => `<tr>
-        <td data-role="staff">${b.MemberName}</td>
-        <td>${b.ItemTitle} <small style="opacity:0.6">(${b.ItemType})</small></td>
-        <td>${b.BorrowDate ? new Date(b.BorrowDate).toLocaleDateString() : '—'}</td>
-        <td>
-            <button class="btn btn_danger"
-                onclick="removeBorrow('${b.ItemType}',${b.Member_ID},${b.ItemType==='Book'?b.Book_ID:b.Movie_ID},'${b.BorrowDate}')">
-                Remove</button>
-        </td>
-    </tr>`).join('');
-
-    applyRole(currentRole);
+    tbody.innerHTML = filtered.map(b => {
+        const itemId = b.ItemType === 'Book' ? b.Book_ID : b.Movie_ID;
+        return `<tr>
+            <td>${isStaff() ? b.MemberName : 'Me'}</td>
+            <td>${b.ItemTitle} <small style="opacity:0.6">(${b.ItemType})</small></td>
+            <td>${b.BorrowDate ? new Date(b.BorrowDate).toLocaleDateString() : '—'}</td>
+            <td>
+                <button class="btn btn_danger"
+                    onclick="removeBorrow('${b.ItemType}',${b.Member_ID},${itemId},'${b.BorrowDate}')">
+                    Remove</button>
+            </td>
+        </tr>`;
+    }).join('');
 }
 
 async function removeBorrow(itemType, memberId, itemId, borrowDate) {
-    if (!confirm('Remove this record?')) return;
-    if (itemType === 'Book') {
-        await apiFetch('/borrows/books', {
+    if (!confirm('Remove this borrow?')) return;
+    const date = new Date(borrowDate).toISOString().split('T')[0];
+
+    const endpoint = itemType === 'Book' ? '/borrows/books' : '/borrows/movies';
+    const body = itemType === 'Book'
+        ? { Member_ID: memberId, Book_ID: itemId, BorrowDate: date }
+        : { Member_ID: memberId, Movie_ID: itemId, BorrowDate: date };
+    try {
+        await apiFetch(endpoint, {
             method: 'DELETE', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ Member_ID: memberId, Book_ID: itemId, BorrowDate: borrowDate })
+            body: JSON.stringify(body)
         });
-    } else {
-        await apiFetch('/borrows/movies', {
-            method: 'DELETE', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ Member_ID: memberId, Movie_ID: itemId, BorrowDate: borrowDate })
-        });
+        showToast('Borrow removed');
+        await showBorrows();
+    } catch {
+
     }
-    showToast('Record removed');
-    showBorrows();
 }
 
-// ══════════════════════════════════════════════════════════════
-// HOLDS
-// Members see only their own holds
-// Staff/Admin see all holds
-// ══════════════════════════════════════════════════════════════
+// Holds
 async function showHolds() {
-    const all = await apiFetch('/borrows').catch(() => []);
-
+    const all = await apiFetch('/holds').catch(() => []);
     const filtered = all.filter(h =>
         currentRole === 'member' ? h.MemberName === currentUsername : true
     );
@@ -531,16 +473,144 @@ async function showHolds() {
         return;
     }
 
-    tbody.innerHTML = filtered.map(h => `<tr>
-        <td data-role="staff">${h.MemberName}</td>
-        <td>${h.ItemTitle} <small style="opacity:0.6">(${h.ItemType})</small></td>
-        <td>${h.BorrowDate ? new Date(h.BorrowDate).toLocaleDateString() : '—'}</td>
+    tbody.innerHTML = filtered.map(h => {
+        const itemId = h.ItemType === 'Book' ? h.Book_ID : h.Movie_ID;
+        return `<tr>
+            <td>${isStaff() ? h.MemberName : 'Me'}</td>
+            <td>${h.ItemTitle} <small style="opacity:0.6">(${h.ItemType})</small></td>
+            <td>${h.BorrowDate ? new Date(h.BorrowDate).toLocaleDateString() : '—'}</td>
+            <td>
+                <button class="btn btn_danger"
+                    onclick="removeHold(${h.Member_ID},${itemId},'${h.BorrowDate}')">
+                    Remove</button>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+async function removeHold(memberId, itemId, borrowDate) {
+    if (!confirm('Remove this hold?')) return;
+    const date = new Date(borrowDate).toISOString().split('T')[0];
+    const body = { Member_ID: memberId, Book_ID: itemId, BorrowDate: date };
+    await apiFetch('/holds/books', {
+        method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    showToast('Hold removed');
+    showHolds();
+}
+
+// Staff
+async function showStaff() {
+    const rows = await apiFetch('/staff').catch(() => []);
+    const tbody = document.getElementById('staff_table');
+    if (!tbody) return;
+
+    if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center">No staff found.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = rows.map(s => `<tr>
+        <td>${s.Staff_ID}</td>
+        <td>${s.Name}</td>
+        <td>${s.Role}</td>
+        <td>${s.HoursWorked}</td>
+        <td>${s.Address || '—'}</td>
         <td>
             <button class="btn btn_danger"
-                onclick="removeBorrow('${h.ItemType}',${h.Member_ID},${h.ItemType==='Book'?h.Book_ID:h.Movie_ID},'${h.BorrowDate}')">
-                Remove</button>
+                onclick="deleteStaff(${s.Staff_ID})">Delete</button>
         </td>
     </tr>`).join('');
+}
 
-    applyRole(currentRole);
+async function deleteStaff(id) {
+    if (!confirm('Delete this staff?')) return;
+    await apiFetch(`/staff/${id}`, { method: 'DELETE' });
+    showToast('Staff deleted');
+    showStaff();
+}
+
+async function submitAddStaff() {
+    const Role = document.getElementById('new_staff_role').value;
+    const HoursWorked = parseFloat(document.getElementById('new_staff_hours').value);
+    const Name = document.getElementById('new_staff_name').value.trim();
+    const Username  = document.getElementById('new_staff_username').value.trim();
+    const Address   = document.getElementById('new_staff_address').value;
+    const Password = document.getElementById('new_staff_password').value;
+    const Location  = document.getElementById('new_staff_location').value;
+    if (!HoursWorked) return showToast('Number of worked hours is required', true);
+    if (!Name) return showToast('Name is required', true);
+    if (!Username) return showToast('Username is required', true);
+    if (!Address) return showToast('Address is required', true);
+    if (!Password) return showToast('Password is required', true);
+    if (!Location) return showToast('Location is required', true);
+
+    await apiFetch('/staff', {
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Role, HoursWorked, Name, Address, Username, Password, Location })
+    });
+    showToast('Staff added!');
+    closeOverlay('add_staff');
+    showStaff();
+}
+
+// Members
+async function showMembers() {
+    const search = document.getElementById('member_search')?.value || '';
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+
+    const members = await apiFetch(`/members?${params}`).catch(() => []);
+    cachedMembers = members;
+
+    const tbody = document.getElementById('members_table');
+    if (!tbody) return;
+
+    if (!members.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">No members found.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = members.map(m => {
+        let actionBtns = `<button class="btn btn_danger"
+                    onclick="deleteMember(${m.Member_ID})">
+                    Delete</button>`;
+
+        return `
+        <tr>
+            <td>${m.Member_ID}</td>
+            <td>${m.Username}</td>
+            <td>${m.Address || '—'}</td>
+            <td>${actionBtns}</td>
+        </tr>`
+    }).join('');
+}
+
+async function submitAddMember() {
+    const Username  = document.getElementById('new_member_username').value.trim();
+    const Address   = document.getElementById('new_member_address').value;
+    const Password = document.getElementById('new_member_password').value;
+    const Location  = document.getElementById('new_member_location').value;
+    if (!Username) return showToast('Username is required', true);
+    if (!Address) return showToast('Address is required', true);
+    if (!Password) return showToast('Password is required', true);
+    if (!Location) return showToast('Location is required', true);
+
+    await apiFetch('/members', {
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Username, Address, Password, Location })
+    });
+    showToast('Member added!');
+    closeOverlay('add_member');
+    showMembers();
+}
+
+async function deleteMember(id) {
+    if (!confirm('Delete this member and all their records?')) return;
+    await apiFetch(`/members/${id}`, { method: 'DELETE' });
+    showToast('Member deleted');
+    showMembers();
 }

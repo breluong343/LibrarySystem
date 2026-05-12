@@ -9,18 +9,18 @@ function viewMovies(filters, callback) {
 }
 
 function createBookHold(bookID, memberID, callback) {
-    const sql = 'INSERT INTO Bookhold (Member_ID, Book_ID, BorrowDate) VALUES (?, ?, NOW())';
-    db.query(sql, [bookID, memberID], (err, result) => {
+    const sql = 'INSERT INTO Bookshold (Member_ID, Book_ID, BorrowDate, Type) VALUES (?, ?, NOW(), "hold")';
+    db.query(sql, [memberID, bookID], (err, result) => {
         callback(err, result);
     });
 }
 
-function createMovieHold(movieID, memberID, callback) {
-    const sql = 'INSERT INTO Moviehold (Movie_ID, member_ID, BorrowDate) VALUES (?, ?, NOW())';
-    db.query(sql, [movieID, memberID], (err, result) => {
-        callback(err, result);
-    });
-}
+// function createMovieHold(movieID, memberID, callback) {
+//     const sql = 'INSERT INTO Movieshold (Movie_ID, member_ID, BorrowDate) VALUES (?, ?, NOW())';
+//     db.query(sql, [movieID, memberID], (err, result) => {
+//         callback(err, result);
+//     });
+// }
 
 function viewInd(table, filters = {}, callback) {
     let sql = `SELECT * FROM ${table} WHERE 1=1`;
@@ -38,6 +38,6 @@ function viewInd(table, filters = {}, callback) {
 }
 
 
-module.exports = { viewBooks, viewMovies, createBookHold, createMovieHold, viewInd };
+module.exports = { viewBooks, viewMovies, createBookHold, viewInd };
 
 

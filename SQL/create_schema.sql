@@ -48,6 +48,7 @@ CREATE TABLE Bookshold (
     Member_ID INT,
     Book_ID INT,
     BorrowDate DATE,
+    Type VARCHAR(10) DEFAULT 'borrow',
     PRIMARY KEY (Member_ID, Book_ID, BorrowDate),
     FOREIGN KEY (Member_ID) REFERENCES Members(Member_ID),
     FOREIGN KEY (Book_ID) REFERENCES Books(Book_ID)
