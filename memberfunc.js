@@ -1,26 +1,11 @@
 const db = require('./db');
 
-function viewBooks(filters, callback) {
-    viewInd('Books', filters, callback);
-}
-
-function viewMovies(filters, callback) {
-    viewInd('Movies', filters, callback);
-}
-
 function createBookHold(bookID, memberID, callback) {
     const sql = 'INSERT INTO Bookshold (Member_ID, Book_ID, BorrowDate, Type) VALUES (?, ?, NOW(), "hold")';
     db.query(sql, [memberID, bookID], (err, result) => {
         callback(err, result);
     });
 }
-
-// function createMovieHold(movieID, memberID, callback) {
-//     const sql = 'INSERT INTO Movieshold (Movie_ID, member_ID, BorrowDate) VALUES (?, ?, NOW())';
-//     db.query(sql, [movieID, memberID], (err, result) => {
-//         callback(err, result);
-//     });
-// }
 
 function viewInd(table, filters = {}, callback) {
     let sql = `SELECT * FROM ${table} WHERE 1=1`;
@@ -38,6 +23,6 @@ function viewInd(table, filters = {}, callback) {
 }
 
 
-module.exports = { viewBooks, viewMovies, createBookHold, viewInd };
+module.exports = { createBookHold, viewInd };
 
 

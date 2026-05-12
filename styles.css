@@ -181,6 +181,7 @@ main {
     margin: 0 auto;
 }
 
+/* Sections */
 .section {
     display: none;
 }
@@ -201,6 +202,7 @@ main {
     color: var(--section-title);
 }
 
+/* Search bar */
 .search_bar {
     display: flex;
     gap: 0.5rem;
@@ -235,6 +237,7 @@ select {
     cursor: pointer;
 }
 
+/* Card display */
 .card_list {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(30%, 1fr));
@@ -445,6 +448,7 @@ tr:hover td {
     color:rgba(28, 100, 0, 0.8);
 }
 
+/* Overlay */
 .overlay_section {  
     display: none;
     position: fixed;
@@ -460,6 +464,7 @@ tr:hover td {
     display: flex;
 }
 
+/* Form input */
 .input_section {
     background: var(--surface);
     border-radius: 10px;
@@ -534,6 +539,7 @@ tr:hover td {
     margin-top: 1.5rem;
 }
 
+/* Empty */
 .empty {
     text-align: center;
     padding: 2rem 2rem;
@@ -544,10 +550,7 @@ tr:hover td {
     font-size: 0.9rem;
 }
 
-/* [data-role] {
-    display: none;
-} */
-
+/* Responsive  */
 @media (max-width: 700px) {
     nav {
         padding: 12px 1rem;
