@@ -65,7 +65,7 @@ app.post('/api/books', (req, res) => {
 //Edit Book
 app.put('/api/books/:id', (req, res) => {
     const { Title, Author, Genre, Type, Copies } = req.body;
-    staff.editBook(req.params.id, Title, null, Author, Copies, Genre, Type, (err) => {
+    staff.editBook(req.params.id, Title, Author, Copies, Genre, Type, (err) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'Book updated!' });
     });
@@ -218,7 +218,7 @@ app.delete('/api/borrows/books', (req, res) => {
 
 app.delete('/api/borrows/movies', (req, res) => {
     const { Member_ID, Movie_ID, BorrowDate } = req.body;
-    const date = BorrowDate || new Date().toISOString().split('T')[0];
+    const date = BorrowDate ? new Date(BorrowDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
     staff.returnMovie(Member_ID, Movie_ID, date, (err) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ message: 'Movie returned!' });

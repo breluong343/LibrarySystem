@@ -56,9 +56,9 @@ function addMovies(Movie_ID, Title, Year, Rating, Genre, callback) {
 }
 
 // Edit book/movie
-function editBook(Book_ID, Title, ISBN, Author, Copies, Genre, Type, callback) {
+function editBook(Book_ID, Title, Author, Copies, Genre, Type, callback) {
     const sql = 'UPDATE Books SET Title = ?, Author = ?, Genre = ?, Type=?, Copies=? WHERE Book_ID=?';
-    db.query(sql, [Title, ISBN, Author, Copies, Genre, Type, Book_ID], (err, result) => {
+    db.query(sql, [Title, Author, Genre, Type, Copies, Book_ID], (err, result) => {
         callback(err, result);
     });
 }
@@ -243,8 +243,8 @@ function returnBookHold(memberID, bookID, borrowDate, callback) {
 
 function returnMovie(memberID, movieID, borrowDate, callback){
     const sql = 'DELETE FROM Movieshold WHERE Member_ID = ? AND Movie_ID = ? AND BorrowDate = ?';
-    db.query(sql, [memberID, movieID, borrowDate], (err) => {
-        if (err) return callback(err);
+    db.query(sql, [memberID, movieID, borrowDate], (err, result) => {
+        callback(err, result)
     });
 }
 

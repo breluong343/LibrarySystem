@@ -446,12 +446,16 @@ async function removeBorrow(itemType, memberId, itemId, borrowDate) {
     const body = itemType === 'Book'
         ? { Member_ID: memberId, Book_ID: itemId, BorrowDate: date }
         : { Member_ID: memberId, Movie_ID: itemId, BorrowDate: date };
-    await apiFetch(endpoint, {
-        method: 'DELETE', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-    });
-    showToast('Borrow removed');
-    showBorrows();
+    try {
+        await apiFetch(endpoint, {
+            method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        showToast('Borrow removed');
+        await showBorrows();
+    } catch {
+
+    }
 }
 
 // Holds
